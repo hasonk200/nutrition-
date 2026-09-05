@@ -1,3 +1,49 @@
+Ran command: `node -v`
+
+I am checking the environment and analyzing the code for bugs.
+
+Checked task Check Node version
+
+在這份「食物營養分類速查表」程式碼中，發現了幾個**功能邏輯錯誤**、**深色模式樣式破版**以及**使用者體驗問題**。以下是詳細的修復說明與修正後的完整代碼：
+
+---
+
+### 🔍 發現的問題與修復說明
+
+1. **排序功能（Sort）無效之重大錯誤**
+   * **問題**：在未選取類別且未輸入關鍵字時，若直接切換右側「排序」（如：熱量 低→高、蛋白質 高→低），`apply()` 判斷 `var on = selKeys().length > 0 || rawKw !== '';` 為 `false`，直接 `return`，**導致排序完全沒有任何反應**。
+   * **修復**：將判定改為 `var on = selKeys().length > 0 || rawKw !== '' || state.sort !== 'default';`，讓使用者隨時可對全食物依營養素或名稱排序。
+
+2. **深色模式下次要標籤文字「隱形」**
+   * **問題**：CSS 中 `body.dark .chip { color: #141b20; }` 的權重與順序覆蓋了 `.chip.sub`（外框型次要標籤），導致深色模式下外框標籤文字變成接近黑色的 `#141b20`，在深底卡片上**完全看不見文字**。
+   * **修復**：改為 `body.dark .chip:not(.sub) { color: #141b20; }`，並確保 `.chip.sub` 保持各自分類的彩色文字。
+
+3. **篩選時點擊頁面導覽（Pills）錨點跳轉失效**
+   * **問題**：當處於篩選狀態時，所有主欄區塊（`#sec-*`）皆為 `display: none`。點擊 `#pills` 的錨點時，瀏覽器在區塊尚未顯示前就進行跳轉，導致跳轉失效或卡在頂部。
+   * **修復**：在重置篩選狀態後，透過 `scrollIntoView({ behavior: 'smooth' })` 確保順暢滾動至對應章節。
+
+4. **查無結果時的空狀態介面問題**
+   * **問題**：
+     1. 搜尋無結果時，上方表格標題列（`<thead>`）依然孤立懸掛，空狀態提示顯示在下方，視覺破碎。
+     2. 不論當前是否已為 OR 模式或單一關鍵字搜尋，按鈕皆固定顯示「改用『符合任一（OR）』試試」，點擊後毫無作用。
+   * **修復**：查無結果時自動隱藏表格標頭；僅在「AND 模式且選取 2 個以上分類」時才顯示切換至 OR 模式的按鈕。
+
+5. **「清除」按鈕未重置排序**
+   * **問題**：點擊「清除」或按下 `Esc` 時，僅清空了關鍵字與類別，但未將「排序」下拉選單重置為「預設」，導致狀態不一致。
+   * **修復**：重置時同步將 `sort` 恢復為 `default`。
+
+6. **搜尋高亮與 XSS 轉義問題（`hl()` 與 `f.d`）**
+   * **問題**：原 `hl(name)` 先對整體字串做 `esc()`，再用關鍵字長度 `slice()`，遇到特殊字元時會切斷 HTML 實體；且表格中的說明欄位 `f.d` 未經轉義。
+   * **修復**：先切片再個別做安全轉義，並讓 `ftext()` 同時涵蓋分類中文名稱，讓搜尋「高鈣」、「低GI」也能直接比對到標籤。
+
+7. **深色模式原生控制項適配（`color-scheme`）與變數命名**
+   * **修復**：加入 `color-scheme: light dark`，解決深色模式下滾動條與 `<select>` 下拉選單發白刺眼的問題；將 `var top` 重新命名為 `totopBtn`，避免與瀏覽器全域物件 `window.top` 產生衝突；並為搜尋圖示加入 `pointer-events: none` 避免點擊阻擋輸入聚焦。
+
+---
+
+### 🛠️ 修復後的完整 HTML 代碼
+
+```html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -7,12 +53,14 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
+  color-scheme: light;
   --bg:#f2f5f9;--card:#fff;--text:#243342;--muted:#6b7c8c;--border:#e2e8f0;
   --accent:#0e7490;--thead:#f0f4f8;--zebra:rgba(0,0,0,.035);--hover:rgba(0,0,0,.06);
   --starch:#8a6d3b;--fiber:#2f7d32;--protein:#c0392b;--gi:#1d6fb8;--calc:#7d3c98;
   --iron:#a04000;--vc:#e67e22;--fat:#b8860b;--light:#00838f;
 }
 body.dark{
+  color-scheme: dark;
   --bg:#151a20;--card:#1e262e;--text:#e6ecf1;--muted:#9db0bd;--border:#313d49;
   --accent:#38bdf8;--thead:#27313b;--zebra:rgba(255,255,255,.05);--hover:rgba(255,255,255,.09);
   --starch:#c9a86a;--fiber:#6cc06c;--protein:#f0876f;--gi:#6cb2f0;--calc:#c39bd3;
@@ -47,7 +95,7 @@ border:1px solid var(--border);background:var(--bg);color:var(--text);
 font-size:13px;outline:none;font-family:inherit}
 .searchbox input:focus{border-color:var(--accent)}
 .searchbox::before{content:'🔍';position:absolute;left:8px;top:50%;
-transform:translateY(-50%);font-size:11px;opacity:.7}
+transform:translateY(-50%);font-size:11px;opacity:.7;pointer-events:none}
 .p-row{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
 .count{font-size:11.5px;color:var(--muted)}
 #reset{border:1px solid var(--border);background:transparent;color:var(--muted);
@@ -66,6 +114,7 @@ body.dark .fbtn.on{color:#141b20}
 .seg button{flex:1;border:none;background:var(--card);color:var(--muted);
 padding:5px 4px;font-size:11.5px;cursor:pointer;font-family:inherit}
 .seg button.on{background:var(--accent);color:#fff}
+body.dark .seg button.on{color:#141b20}
 select#sort{width:100%;padding:5px 6px;border-radius:8px;border:1px solid var(--border);
 background:var(--card);color:var(--text);font-size:12px;font-family:inherit;cursor:pointer}
 .hint{font-size:11px;color:var(--muted);margin-top:8px}
@@ -99,7 +148,7 @@ tbody tr:hover{background:var(--hover)}
 mark{background:rgba(14,116,144,.18);color:inherit;border-radius:3px;padding:0 2px}
 body.dark mark{background:rgba(56,189,248,.25)}
 
-/* ── 營養小方塊（仿截圖樣式） ── */
+/* ── 營養小方塊 ── */
 .nutri{display:flex;flex-wrap:wrap;gap:4px;max-width:400px;align-items:stretch}
 .perml{display:inline-flex;align-items:center;font-size:9.5px;color:var(--muted);
 border:1px dashed var(--border);border-radius:5px;padding:1px 5px;white-space:nowrap}
@@ -116,7 +165,8 @@ border:1px solid var(--border);border-radius:7px;line-height:1.35;text-align:cen
 .chip{display:inline-block;padding:0 7px;border-radius:99px;font-size:11px;
 line-height:1.7;color:#fff;background:var(--c,#888);margin:1px 3px 1px 0;white-space:nowrap}
 .chip.sub{background:transparent;border:1px solid var(--c,#888);color:var(--c,#888)}
-body.dark .chip{color:#141b20}
+body.dark .chip:not(.sub){color:#141b20}
+body.dark .chip.sub{color:var(--c,#888)}
 .c-starch{--c:var(--starch)}.c-fiber{--c:var(--fiber)}.c-protein{--c:var(--protein)}
 .c-gi{--c:var(--gi)}.c-calc{--c:var(--calc)}.c-iron{--c:var(--iron)}
 .c-vc{--c:var(--vc)}.c-fat{--c:var(--fat)}.c-light{--c:var(--light)}
@@ -125,6 +175,7 @@ body.dark .chip{color:#141b20}
 border-radius:8px;padding:5px 12px;background:transparent;cursor:pointer;
 font-family:inherit;font-size:12.5px}
 .empty button:hover{background:var(--accent);color:#fff}
+body.dark .empty button:hover{color:#141b20}
 .tips ul{list-style:none}
 .tips li{padding:7px 0 7px 22px;position:relative;border-bottom:1px dashed var(--border);
 font-size:12.5px}
@@ -187,13 +238,13 @@ font-size:16px;cursor:pointer;z-index:70;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 <section class="card" id="results" style="display:none">
   <h2>🎯 篩選結果<span class="num" id="resNum"></span></h2>
   <p class="sec-note" id="resDesc"></p>
-  <div class="twrap"><table>
+  <div class="twrap" id="resTwrap"><table>
     <thead><tr><th>食物名稱</th><th>營養屬性（實心＝符合條件）</th><th>主要營養成分說明</th><th>每 100g 粗估營養數值</th></tr></thead>
     <tbody id="resBody"></tbody>
   </table></div>
   <div class="empty" id="empty" style="display:none">
-    <p>😕 找不到同時符合這些條件的食物</p>
-    <button type="button" id="tryOr">改用「符合任一（OR）」試試</button>
+    <p id="emptyTxt">😕 找不到符合條件的食物</p>
+    <button type="button" id="tryOr" style="display:none">改用「符合任一（OR）」試試</button>
   </div>
 </section>
 
@@ -266,10 +317,7 @@ var CAT={
  light:{i:'🥒',n:'低熱量',sh:'低熱量',v:'--light',s:'每100g ≤40 kcal 且高水分，體積大飽足感佳'}
 };
 
-/* ════ 食物資料庫（結構化數值，加食物＝加一行）
-   n=名稱 t=屬性 d=說明
-   k=熱量 p=蛋白質 f=脂肪 c=碳水（每100g；u:'ml' 為每100ml）
-   x=額外營養方塊 [名稱,數值] ════ */
+/* ════ 食物資料庫 ════ */
 var F=[
 {n:'白米飯（熟）',t:['starch'],d:'精製澱粉，升糖快；搭配蔬菜與蛋白質平衡',k:150,p:3,f:0.3,c:33,x:[['GI','約 80']]},
 {n:'糙米（生）',t:['starch','fiber','gi'],d:'保留麩皮胚芽，纖維、B群、鎂皆優於白米',k:360,p:7.5,f:2.7,c:75,x:[['膳食纖維','3.5 g'],['GI','約 55']]},
@@ -379,19 +427,28 @@ var F=[
 ];
 
 /* ════ 工具 ════ */
-function esc(s){return String(s).replace(/[&<>"]/g,function(c){
-  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function esc(s){
+  if(s==null)return '';
+  return String(s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
 function ftext(f){
+  var tagText = f.t.map(function(t){return CAT[t]?(CAT[t].n+' '+CAT[t].sh):'';}).join(' ');
   var ex=(f.x||[]).map(function(e){return e[0]+' '+e[1];}).join(' ');
-  return f.n+' '+f.d+' '+ex;
+  return f.n+' '+tagText+' '+f.d+' '+ex;
 }
 function chipsBrowse(tags,current){
   return tags.map(function(t){
+    if(!CAT[t])return '';
     return '<span class="chip'+(t===current?'':' sub')+' c-'+t+'">'+(t===current?'':'＋')+CAT[t].sh+'</span>';
   }).join('');
 }
 function chipsSolid(tags){
-  return tags.map(function(t){return '<span class="chip c-'+t+'">'+CAT[t].sh+'</span>';}).join('');
+  return tags.map(function(t){
+    if(!CAT[t])return '';
+    return '<span class="chip c-'+t+'">'+CAT[t].sh+'</span>';
+  }).join('');
 }
 
 /* ════ 營養小方塊 ════ */
@@ -404,7 +461,7 @@ function tiles(f){
    +'<span class="nb"><i>脂肪</i>'+gu(f.f,'g')+'</span>'
    +'<span class="nb"><i>碳水</i>'+gu(f.c,'g')+'</span>';
   (f.x||[]).forEach(function(e){
-    h+='<span class="nb ex"><i>'+e[0]+'</i><b>'+e[1]+'</b></span>';
+    h+='<span class="nb ex"><i>'+esc(e[0])+'</i><b>'+esc(e[1])+'</b></span>';
   });
   return '<div class="nutri">'+h+'</div>';
 }
@@ -421,7 +478,7 @@ CAT_ORDER.forEach(function(k){
    +'</tr></thead><tbody>';
   foods.forEach(function(f){
     html+='<tr><td class="food-name">'+esc(f.n)+'</td><td>'+chipsBrowse(f.t,k)
-      +'</td><td>'+f.d+'</td><td>'+tiles(f)+'</td></tr>';
+      +'</td><td>'+esc(f.d)+'</td><td>'+tiles(f)+'</td></tr>';
   });
   html+='</tbody></table></div></section>';
 });
@@ -429,7 +486,7 @@ secs.innerHTML=html;
 
 /* 跨類速查 */
 var multi=F.filter(function(f){return f.t.length>=2;})
-  .sort(function(a,b){return b.t.length-a.t.length;});
+  .sort(function(a,b){return (b.t.length-a.t.length)||a.n.localeCompare(b.n,'zh-Hant');});
 document.getElementById('crossBody').innerHTML=multi.map(function(f){
   return '<tr><td class="food-name">'+esc(f.n)+'</td><td>'+chipsSolid(f.t)+'</td></tr>';
 }).join('');
@@ -471,8 +528,9 @@ var sortSel=document.getElementById('sort');
 sortSel.addEventListener('change',function(){state.sort=sortSel.value;apply();});
 
 function match(f){
-  var kw=q.value.trim().toLowerCase();
-  var kwHit=!kw||ftext(f).toLowerCase().indexOf(kw)>-1;
+  var rawKws=q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  var text=ftext(f).toLowerCase();
+  var kwHit=!rawKws.length||rawKws.every(function(kw){return text.indexOf(kw)>-1;});
   var keys=selKeys(), catHit;
   if(!keys.length)catHit=true;
   else if(state.mode==='and')catHit=keys.every(function(k){return f.t.indexOf(k)>-1;});
@@ -480,88 +538,170 @@ function match(f){
   return kwHit&&catHit;
 }
 function hl(name){
-  var kw=q.value.trim(), en=esc(name);
-  if(!kw)return en;
-  var i=en.toLowerCase().indexOf(kw.toLowerCase());
-  if(i<0)return en;
-  return en.slice(0,i)+'<mark>'+en.slice(i,i+kw.length)+'</mark>'+en.slice(i+kw.length);
+  var raw=q.value.trim();
+  if(!raw)return esc(name);
+  var kws=raw.split(/\s+/).filter(Boolean);
+  var en=esc(name);
+  kws.forEach(function(kw){
+    var clean=esc(kw).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    if(!clean)return;
+    try{
+      en=en.replace(new RegExp('('+clean+')','gi'),'<mark>$1</mark>');
+    }catch(e){}
+  });
+  return en;
 }
 function resChips(f){
   return f.t.map(function(t){
+    if(!CAT[t])return '';
     return '<span class="chip'+(state.sel[t]?'':' sub')+' c-'+t+'">'+CAT[t].sh+'</span>';
   }).join('');
 }
 
 function apply(){
   var rawKw=q.value.trim();
-  var on=selKeys().length>0||rawKw!=='';
+  var on=selKeys().length>0 || rawKw!=='' || state.sort!=='default';
   document.getElementById('std').style.display=on?'none':'';
   document.getElementById('cross').style.display=on?'none':'';
   [].forEach.call(document.querySelectorAll('section.card[id^="sec-"]'),function(s){
     s.style.display=on?'none':'';
   });
-  var res=document.getElementById('results'), empty=document.getElementById('empty'),
+  var res=document.getElementById('results'),
+      empty=document.getElementById('empty'),
+      emptyTxt=document.getElementById('emptyTxt'),
+      tryOr=document.getElementById('tryOr'),
+      resTwrap=document.getElementById('resTwrap'),
       tbody=document.getElementById('resBody');
-  if(!on){ res.style.display='none'; countEl.textContent='共收錄 '+F.length+' 項'; return; }
+      
+  if(!on){
+    res.style.display='none';
+    countEl.textContent='共收錄 '+F.length+' 項';
+    return;
+  }
 
   var list=F.filter(match);
-  if(state.sort==='name')list.sort(function(a,b){return a.n.localeCompare(b.n,'zh-Hant');});
-  else if(state.sort==='tags')list.sort(function(a,b){return b.t.length-a.t.length||a.n.localeCompare(b.n,'zh-Hant');});
-  else if(state.sort==='kcalA')list.sort(function(a,b){return a.k-b.k;});
-  else if(state.sort==='kcalD')list.sort(function(a,b){return b.k-a.k;});
-  else if(state.sort==='prot')list.sort(function(a,b){return (b.p||0)-(a.p||0);});
+  if(state.sort==='name'){
+    list.sort(function(a,b){return a.n.localeCompare(b.n,'zh-Hant');});
+  }else if(state.sort==='tags'){
+    list.sort(function(a,b){return (b.t.length-a.t.length)||a.n.localeCompare(b.n,'zh-Hant');});
+  }else if(state.sort==='kcalA'){
+    list.sort(function(a,b){return (a.k-b.k)||a.n.localeCompare(b.n,'zh-Hant');});
+  }else if(state.sort==='kcalD'){
+    list.sort(function(a,b){return (b.k-a.k)||a.n.localeCompare(b.n,'zh-Hant');});
+  }else if(state.sort==='prot'){
+    list.sort(function(a,b){return ((b.p||0)-(a.p||0))||a.n.localeCompare(b.n,'zh-Hant');});
+  }
 
   var keys=selKeys();
   var cond=keys.length?keys.map(function(k){return CAT[k].i+' '+CAT[k].n;})
     .join(state.mode==='and'?' ＋ ':' 或 ')
-    +(state.mode==='and'?'（需全部符合）':'（符合任一即可）'):'';
+    +(keys.length>1?(state.mode==='and'?'（需全部符合）':'（符合任一即可）'):''):'';
   var kwTxt=rawKw?('關鍵字「'+esc(rawKw)+'」'):'';
-  document.getElementById('resDesc').innerHTML=[cond,kwTxt].filter(Boolean).join(' ・ ')||'全部食物';
+  var sortTxtMap={name:'名稱排序',tags:'屬性數排序',kcalA:'熱量 低→高',kcalD:'熱量 高→低',prot:'蛋白質 高→低'};
+  var sortTxt=state.sort!=='default'?(sortTxtMap[state.sort]||''):'';
+
+  document.getElementById('resDesc').innerHTML=[cond,kwTxt,sortTxt].filter(Boolean).join(' ・ ')||'全部食物';
   document.getElementById('resNum').textContent=list.length+' 項';
 
   if(list.length){
     tbody.innerHTML=list.map(function(f){
       return '<tr><td class="food-name">'+hl(f.n)+'</td><td>'+resChips(f)
-        +'</td><td>'+f.d+'</td><td>'+tiles(f)+'</td></tr>';
+        +'</td><td>'+esc(f.d)+'</td><td>'+tiles(f)+'</td></tr>';
     }).join('');
+    resTwrap.style.display='';
     empty.style.display='none';
   }else{
-    tbody.innerHTML=''; empty.style.display='';
+    tbody.innerHTML='';
+    resTwrap.style.display='none';
+    empty.style.display='';
+    if(state.mode==='and' && keys.length>1){
+      emptyTxt.textContent='😕 找不到同時符合這些條件的食物';
+      tryOr.style.display='';
+    }else{
+      emptyTxt.textContent='😕 找不到符合條件的食物';
+      tryOr.style.display='none';
+    }
   }
   res.style.display='';
   countEl.textContent='找到 '+list.length+' 項';
 }
 
 q.addEventListener('input',apply);
+q.addEventListener('search',apply);
+
+function resetAll(){
+  q.value='';
+  state.sel={};
+  state.sort='default';
+  sortSel.value='default';
+  syncBtns();
+  apply();
+}
+
 document.getElementById('reset').addEventListener('click',function(){
-  q.value=''; state.sel={}; syncBtns(); apply(); q.focus();
+  resetAll();
+  q.focus();
 });
 document.getElementById('tryOr').addEventListener('click',function(){
-  state.mode='or'; syncMode(); apply();
+  state.mode='or';
+  syncMode();
+  apply();
 });
 document.getElementById('pills').addEventListener('click',function(e){
-  if(e.target.closest('a')&&(selKeys().length||q.value.trim())){
-    q.value=''; state.sel={}; syncBtns(); apply();
+  var a=e.target.closest('a');
+  if(!a)return;
+  var targetId=a.getAttribute('href');
+  var wasFiltered=selKeys().length>0 || q.value.trim()!=='' || state.sort!=='default';
+  if(wasFiltered){
+    resetAll();
+    if(targetId && targetId.startsWith('#')){
+      setTimeout(function(){
+        var el=document.querySelector(targetId);
+        if(el)el.scrollIntoView({behavior:'smooth'});
+      },20);
+    }
   }
 });
 document.addEventListener('keydown',function(e){
-  if(e.key==='/'&&document.activeElement!==q){ e.preventDefault(); q.focus(); }
-  if(e.key==='Escape'){ q.value=''; state.sel={}; syncBtns(); apply(); }
+  if(e.key==='/' && document.activeElement!==q){
+    e.preventDefault();
+    q.focus();
+  }
+  if(e.key==='Escape'){
+    resetAll();
+    q.blur();
+  }
 });
-syncMode(); apply();
+syncMode();
+apply();
 
 /* ════ 深色模式／回頂端 ════ */
-var btn=document.getElementById('theme');
-function setTheme(d){ body.classList.toggle('dark',d); btn.textContent=d?'☀️':'🌙';
-  try{localStorage.setItem('foodtheme',d?'dark':'light');}catch(e){} }
-btn.addEventListener('click',function(){ setTheme(!body.classList.contains('dark')); });
-var saved=null; try{saved=localStorage.getItem('foodtheme');}catch(e){}
-if(saved==='dark'||(!saved&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)) setTheme(true);
+var themeBtn=document.getElementById('theme');
+function setTheme(d,save){
+  body.classList.toggle('dark',d);
+  themeBtn.textContent=d?'☀️':'🌙';
+  if(save){
+    try{localStorage.setItem('foodtheme',d?'dark':'light');}catch(e){}
+  }
+}
+themeBtn.addEventListener('click',function(){
+  setTheme(!body.classList.contains('dark'),true);
+});
+var savedTheme=null;
+try{savedTheme=localStorage.getItem('foodtheme');}catch(e){}
+if(savedTheme==='dark'||(!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+  setTheme(true,false);
+}
 
-var top=document.getElementById('totop');
-window.addEventListener('scroll',function(){top.style.display=window.scrollY>400?'block':'none';},{passive:true});
-top.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+var totopBtn=document.getElementById('totop');
+window.addEventListener('scroll',function(){
+  totopBtn.style.display=(window.scrollY||document.documentElement.scrollTop)>400?'block':'none';
+},{passive:true});
+totopBtn.addEventListener('click',function(){
+  window.scrollTo({top:0,behavior:'smooth'});
+});
 })();
 </script>
 </body>
 </html>
+```
