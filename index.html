@@ -20,7 +20,7 @@ body.dark{
   --starch:#c9a86a;--fiber:#6cc06c;--protein:#f0876f;--gi:#6cb2f0;--calc:#c39bd3;
   --iron:#e8965a;--vc:#f5a45c;--fat:#e0c050;--light:#4fc3dd;
 }
-body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+body{font-family:"Noto Sans TC","Noto Sans SC","PingFang TC","PingFang SC","Microsoft JhengHei","Microsoft YaHei",system-ui,sans-serif;
 font-size:13.5px;background:var(--bg);color:var(--text);line-height:1.55}
 html{scroll-behavior:smooth}
 section{scroll-margin-top:10px}
@@ -33,6 +33,14 @@ grid-template-areas:"hero hero" "main panel" "foot foot"}
 gap:10px;flex-wrap:wrap}
 h1{font-size:clamp(18px,2.4vw,24px)}
 .subtitle{color:var(--muted);font-size:12.5px;margin-top:2px}
+.hero-actions{display:flex;gap:8px;align-items:center;flex:none}
+.lang-seg{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;
+background:var(--card)}
+.lang-seg button{border:none;background:transparent;color:var(--muted);
+padding:4px 11px;font-size:12px;cursor:pointer;font-family:inherit}
+.lang-seg button:hover{color:var(--text)}
+.lang-seg button.on{background:var(--accent);color:#fff}
+body.dark .lang-seg button.on{color:#141b20}
 .theme-btn{border:1px solid var(--border);background:var(--card);color:var(--text);
 border-radius:8px;padding:4px 10px;cursor:pointer;font-size:14px}
 .theme-btn:hover{border-color:var(--accent)}
@@ -145,7 +153,7 @@ font-size:16px;cursor:pointer;z-index:70;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 #panel{position:static;max-height:none}
 .fbar{grid-template-columns:repeat(3,1fr)}
 }
-@media print{#panel,#totop,.theme-btn,.hint{display:none}
+@media print{#panel,#totop,.theme-btn,.hint,.lang-seg{display:none}
 .wrap{display:block;max-width:none} body{background:#fff;font-size:11px}}
 </style>
 </head>
@@ -154,35 +162,35 @@ font-size:16px;cursor:pointer;z-index:70;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 
 <header class="hero">
   <div>
-    <h1>🥗 食物營養分類速查表</h1>
-    <p class="subtitle">105 項食物・九大屬性・營養數值方塊化・多選條件篩選（AND／OR）</p>
+    <h1 id="ptTitle">🥗 食物營養分類速查表</h1>
+    <p class="subtitle" id="ptSub"></p>
   </div>
-  <button class="theme-btn" id="theme" title="切換深／淺色模式">🌙</button>
+  <div class="hero-actions">
+    <div class="lang-seg" id="langSeg">
+      <button type="button" data-l="0" class="on" title="繁體中文">繁</button>
+      <button type="button" data-l="1" title="简体中文">简</button>
+      <button type="button" data-l="2" title="English">EN</button>
+    </div>
+    <button class="theme-btn" id="theme">🌙</button>
+  </div>
 </header>
 
 <!-- ── 右側常駐篩選面板 ── -->
 <aside id="panel">
-  <div class="p-title">🎯 條件篩選</div>
-  <div class="searchbox"><input id="q" type="search" placeholder="搜尋食物或關鍵字"></div>
-  <div class="p-row"><span class="count" id="count"></span><button id="reset">清除</button></div>
-  <div class="p-label">類別（可多選）</div>
+  <div class="p-title" id="panelTitle">🎯 條件篩選</div>
+  <div class="searchbox"><input id="q" type="search"></div>
+  <div class="p-row"><span class="count" id="count"></span><button id="reset"></button></div>
+  <div class="p-label" id="lblCat"></div>
   <div class="fbar" id="fbar"></div>
-  <div class="p-label">符合模式</div>
+  <div class="p-label" id="lblMode"></div>
   <div class="seg">
-    <button type="button" id="modeAnd" class="on">全部 AND</button>
-    <button type="button" id="modeOr">任一 OR</button>
+    <button type="button" id="modeAnd" class="on"></button>
+    <button type="button" id="modeOr"></button>
   </div>
-  <div class="p-label">排序</div>
-  <select id="sort">
-    <option value="default">預設</option>
-    <option value="name">名稱</option>
-    <option value="tags">屬性數多→少</option>
-    <option value="kcalA">熱量 低→高</option>
-    <option value="kcalD">熱量 高→低</option>
-    <option value="prot">蛋白質 高→低</option>
-  </select>
-  <p class="hint">💡 多選類別＋關鍵字組合查詢；<kbd>/</kbd> 聚焦搜尋、<kbd>Esc</kbd> 清除。查無結果可改用 OR。</p>
-  <div class="p-label">頁面導覽</div>
+  <div class="p-label" id="lblSort"></div>
+  <select id="sort"></select>
+  <p class="hint" id="hintTxt"></p>
+  <div class="p-label" id="lblNav"></div>
   <nav class="mini-nav" id="pills"></nav>
 </aside>
 
@@ -190,194 +198,265 @@ font-size:16px;cursor:pointer;z-index:70;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 <main id="mainCol">
 
 <section class="card" id="results" style="display:none">
-  <h2>🎯 篩選結果<span class="num" id="resNum"></span></h2>
+  <h2><span id="resTitle">🎯 篩選結果</span><span class="num" id="resNum"></span></h2>
   <p class="sec-note" id="resDesc"></p>
   <div class="twrap" id="resTwrap"><table>
-    <thead><tr><th>食物名稱</th><th>營養屬性（實心＝符合條件）</th><th>主要營養成分說明</th><th>每 100g 粗估營養數值</th></tr></thead>
+    <thead><tr><th id="resTh1"></th><th id="resTh2"></th><th id="resTh3"></th><th id="resTh4"></th></tr></thead>
     <tbody id="resBody"></tbody>
   </table></div>
   <div class="empty" id="empty" style="display:none">
-    <p id="emptyTxt">😕 找不到符合條件的食物</p>
-    <button type="button" id="tryOr" style="display:none">改用「符合任一（OR）」試試</button>
+    <p id="emptyTxt"></p>
+    <button type="button" id="tryOr" style="display:none"></button>
   </div>
 </section>
 
 <section class="card" id="std">
-  <h2>📏 分類判定參考標準</h2>
-  <p class="sec-note">各類別的粗略判定門檻</p>
+  <h2 id="stdTitle"></h2>
+  <p class="sec-note" id="stdNote"></p>
   <div class="twrap"><table>
-    <thead><tr><th>類別</th><th>粗略判定參考</th></tr></thead>
-    <tbody>
-      <tr><td><span class="chip c-starch">主食</span></td><td>主要醣類（熱量）來源；本表同時附 GI 對照</td></tr>
-      <tr><td><span class="chip c-fiber">高纖</span></td><td>每100g膳食纖維顯著（穀豆類約 ≥6g；蔬菜中相對突出者）</td></tr>
-      <tr><td><span class="chip c-protein">高蛋白</span></td><td>每100g蛋白質 ≥12g（葷食），或優質植物蛋白（豆製品）</td></tr>
-      <tr><td><span class="chip c-gi">低GI</span></td><td>升糖指數 GI ≤55</td></tr>
-      <tr><td><span class="chip c-calc">高鈣</span></td><td>每100g鈣 ≥100mg 為良好來源、≥240mg 為豐富來源</td></tr>
-      <tr><td><span class="chip c-iron">高鐵</span></td><td>每100g鐵 ≥3mg；動物性（血基質鐵）吸收率較佳</td></tr>
-      <tr><td><span class="chip c-vc">高維C</span></td><td>每100g維生素C ≥30mg 為良好來源</td></tr>
-      <tr><td><span class="chip c-fat">好油脂</span></td><td>以單元不飽和脂肪或 Omega-3 為主的油脂來源</td></tr>
-      <tr><td><span class="chip c-light">低熱量</span></td><td>每100g ≤40 kcal 且高水分、體積大飽足感佳</td></tr>
-    </tbody>
+    <thead><tr><th id="stdTh1"></th><th id="stdTh2"></th></tr></thead>
+    <tbody id="stdBody"></tbody>
   </table></div>
 </section>
 
 <div id="secs"></div>
 
 <section class="card" id="cross">
-  <h2>🔄 跨類食物速查<span class="num">一物多類</span></h2>
-  <p class="sec-note">速記：纖維找「豆穀葉」、蛋白找「蛋肉魚豆」、補鈣找「奶豆芝麻小魚」、補鐵找「血肝莧蠣」、維C找「芭樂奇異椒」</p>
+  <h2><span id="crossTitle"></span><span class="num" id="crossNum"></span></h2>
+  <p class="sec-note" id="crossNote"></p>
   <div class="twrap"><table>
-    <thead><tr><th>食物</th><th>同時涵蓋類別</th></tr></thead>
+    <thead><tr><th id="crossTh1"></th><th id="crossTh2"></th></tr></thead>
     <tbody id="crossBody"></tbody>
   </table></div>
 </section>
 
 <section class="card tips" id="tips">
-  <h2>💡 實用搭配提醒</h2>
-  <p class="sec-note">讓營養素發揮更大效益的小技巧</p>
-  <ul>
-    <li><strong>補鐵</strong>：飯後攝取維生素C水果（芭樂、奇異果）促進植物性鐵吸收；茶與咖啡的單寧會抑制吸收，避免隨餐飲用。</li>
-    <li><strong>補纖維</strong>：循序增量並多喝水，避免脹氣不適。</li>
-    <li><strong>穩血糖</strong>：除 GI 外還須考量份量（升糖負荷 GL）；糊化程度越高 GI 越高（粥＞飯）。</li>
-    <li><strong>補鈣</strong>：搭配維生素D（日曬、蛋黃、鮭魚）以利吸收。</li>
-    <li><strong>維C保鮮</strong>：維生素C怕熱怕光，涼拌、快炒、現切現吃保留最多。</li>
-    <li><strong>堅果雖好</strong>：好油但熱量高，每日一份為宜（約 10~15 顆杏仁或 1 湯匙）。</li>
-    <li><strong>藥物留意</strong>：葡萄柚與部分藥物（降血脂、免疫抑制劑等）有交互作用，服藥者先諮詢醫師。</li>
-  </ul>
+  <h2 id="tipsTitle"></h2>
+  <p class="sec-note" id="tipsNote"></p>
+  <ul id="tipsList"></ul>
 </section>
 
 </main>
 
 <footer class="note">
-  <p><strong>附註</strong>：數值為粗估，綜合參考台灣食藥署「食品營養成分資料庫」及 USDA 資料，以生重／乾重為主（液態以每 100ml 計，該列會標註「每 100ml」）。實際含量隨品種、產季、加工與烹調方式而異；特殊疾病（腎臟病、糖尿病、痛風等）族群請諮詢醫師或營養師。</p>
+  <p><strong id="footH"></strong><span id="footB"></span></p>
 </footer>
 
 </div>
-<button id="totop" title="回到頂端">↑</button>
+<button id="totop">↑</button>
 
 <script>
 (function(){
-/* ════ 分類定義 ════ */
-var CAT_ORDER=['starch','fiber','protein','gi','calc','iron','vc','fat','light'];
-var CAT={
- starch:{i:'🍚',n:'澱粉主食',sh:'主食',v:'--starch',s:'常見主食的熱量與 GI 對照；精製澱粉 GI 偏高'},
- fiber:{i:'🌾',n:'高纖維',sh:'高纖',v:'--fiber',s:'促進腸道蠕動、增加飽足感；記得搭配足夠水分'},
- protein:{i:'🍳',n:'高蛋白',sh:'高蛋白',v:'--protein',s:'肌肉修復與合成；葷素來源皆收錄'},
- gi:{i:'🍎',n:'低GI',sh:'低GI',v:'--gi',s:'GI ≤55，飯後血糖較和緩；仍須考量份量（GL）'},
- calc:{i:'🥛',n:'高鈣',sh:'高鈣',v:'--calc',s:'骨骼牙齒基石；搭配維生素D吸收更佳'},
- iron:{i:'🥩',n:'高鐵',sh:'高鐵',v:'--iron',s:'血基質鐵吸收佳；植物鐵搭配維生素C'},
- vc:{i:'🍊',n:'高維C',sh:'高維C',v:'--vc',s:'抗氧化、助鐵吸收；怕熱怕光'},
- fat:{i:'🥑',n:'好油脂',sh:'好油脂',v:'--fat',s:'單元不飽和與 Omega-3 為主；熱量高，份量留意'},
- light:{i:'🥒',n:'低熱量',sh:'低熱量',v:'--light',s:'每100g ≤40 kcal 且高水分，體積大飽足感佳'}
+/* ════ 多語系架構：L=0 繁體 / 1 简体 / 2 English ════ */
+var L=0, LOC=['zh-Hant','zh-Hans','en'], SFX=['類','类',''];
+function t(k){return T[k][L];}
+
+var T={
+title:['🥗 食物營養分類速查表','🥗 食物营养速查表','🥗 Food Nutrition Reference'],
+subtitle:['105 項食物・九大屬性・營養數值方塊化・多選條件篩選（AND／OR）','105 项食物・九大属性・营养数值方块化・多选条件筛选（AND／OR）','105 foods · 9 nutrient groups · nutrient tiles · multi-filter (AND / OR)'],
+panelTitle:['🎯 條件篩選','🎯 条件筛选','🎯 Filters'],
+searchPh:['搜尋食物或關鍵字','搜索食物或关键字','Search foods or keywords'],
+clear:['清除','清除','Clear'],
+lblCat:['類別（可多選）','类别（可多选）','Categories (multi-select)'],
+lblMode:['符合模式','符合模式','Match mode'],
+modeAnd:['全部 AND','全部 AND','All AND'],
+modeOr:['任一 OR','任一 OR','Any OR'],
+lblSort:['排序','排序','Sort'],
+hint:['💡 多選類別＋關鍵字組合查詢；<kbd>/</kbd> 聚焦搜尋、<kbd>Esc</kbd> 清除。查無結果可改用 OR。','💡 多选类别＋关键字组合查询；<kbd>/</kbd> 聚焦搜索、<kbd>Esc</kbd> 清除。查无结果可改用 OR。','💡 Combine categories + keywords; press <kbd>/</kbd> to focus search, <kbd>Esc</kbd> to clear.'],
+lblNav:['頁面導覽','页面导航','Navigate'],
+thFood:['食物名稱','食物名称','Food'],
+thAttr:['營養屬性','营养属性','Attributes'],
+thAttrRes:['營養屬性（實心＝符合條件）','营养属性（实心＝符合条件）','Attributes (solid = matched)'],
+thDesc:['主要營養成分說明','主要营养成分说明','Description'],
+thVal:['每 100g 粗估營養數值','每 100g 粗估营养数值','Est. nutrients / 100g'],
+tKcal:['熱量','热量','Energy'],
+tProt:['蛋白質','蛋白质','Protein'],
+tFat:['脂肪','脂肪','Fat'],
+tCarb:['碳水','碳水','Carbs'],
+perMl:['每 100ml','每 100ml','per 100 ml'],
+stdTitle:['📏 分類判定參考標準','📏 分类判定参考标准','📏 Classification Criteria'],
+stdNote:['各類別的粗略判定門檻','各类别的粗略判定门槛','Rough thresholds for each category'],
+stdThCat:['類別','类别','Category'],
+stdThRef:['粗略判定參考','粗略判定参考','Criteria'],
+crossTitle:['🔄 跨類食物速查','🔄 跨类食物速查','🔄 Cross-category Foods'],
+crossNum:['一物多類','一物多类','multi-group'],
+crossThFood:['食物','食物','Food'],
+crossThCat:['同時涵蓋類別','同时涵盖类别','Groups covered'],
+crossNote:['速記：纖維找「豆穀葉」、蛋白找「蛋肉魚豆」、補鈣找「奶豆芝麻小魚」、補鐵找「血肝莧蠣」','速记：纤维找“豆谷叶”、蛋白找“蛋肉鱼豆”、补钙找“奶豆芝麻小鱼”、补铁找“血肝苋蚝”','Quick recall: fiber = beans·grains·greens; protein = egg·meat·fish·soy; calcium = dairy·tofu·sesame·small fish; iron = blood curd·liver·amaranth·oysters.'],
+tipsTitle:['💡 實用搭配提醒','💡 实用搭配提醒','💡 Practical Tips'],
+tipsNote:['讓營養素發揮更大效益的小技巧','让营养素发挥更大效益的小技巧','Small tricks to get more from your nutrients'],
+resTitle:['🎯 篩選結果','🎯 筛选结果','🎯 Search Results'],
+resAll:['全部食物','全部食物','All foods'],
+found:['找到 ','找到 ','Found '],
+total:['共收錄 ','共收录 ','Total '],
+items:[' 項',' 项',' items'],
+kw:['關鍵字「','关键字「','Keyword "'],
+kwEnd:['」','」','"'],
+andJoin:[' ＋ ',' ＋ ',' AND '],
+orJoin:[' 或 ',' 或 ',' OR '],
+needAll:['（需全部符合）','（需全部符合）',' (all must match)'],
+anyOk:['（符合任一即可）','（符合任一即可）',' (any one matches)'],
+emptyNone:['😕 找不到符合條件的食物','😕 找不到符合条件的食物','😕 No foods match the conditions'],
+emptyAnd:['😕 找不到同時符合這些條件的食物','😕 找不到同时符合这些条件的食物','😕 No foods match ALL conditions'],
+tryOr:['改用「符合任一（OR）」試試','改用「符合任一（OR）」试试','Try "Any (OR)" mode'],
+themeTitle:['切換深／淺色模式','切换深／浅色模式','Toggle dark / light mode'],
+totopTitle:['回到頂端','回到顶端','Back to top'],
+footH:['附註','附注','Note']
 };
 
-/* ════ 食物資料庫 ════ */
+var FOOTB=['數值為粗估，綜合參考台灣食藥署「食品營養成分資料庫」及 USDA 資料，以生重／乾重為主（液態以每 100ml 計，該列會標註「每 100ml」）。實際含量隨品種、產季、加工與烹調方式而異；特殊疾病（腎臟病、糖尿病、痛風等）族群請諮詢醫師或營養師。',
+'数值为粗估，综合参考台湾食药署“食品营养成分资料库”及 USDA 资料，以生重／干重为主（液态以每 100ml 计，该列会标注“每 100ml”）。实际含量随品种、产季、加工与烹调方式而异；特殊疾病（肾脏病、糖尿病、痛风等）族群请咨询医师或营养师。',
+'Values are rough estimates from the Taiwan FDA food composition database and USDA data, raw/dry weight basis (liquids per 100 ml and marked as such). Actual content varies with variety, season, processing and cooking. For kidney disease, diabetes, gout etc., consult a physician or dietitian.'];
+
+var CAT_ORDER=['starch','fiber','protein','gi','calc','iron','vc','fat','light'];
+var CAT={
+ starch:{i:'🍚',n:['澱粉主食','淀粉主食','Staple Foods'],sh:['主食','主食','Staple'],v:'--starch',s:['常見主食的熱量與 GI 對照；精製澱粉 GI 偏高','常见主食的热量与 GI 对照；精制淀粉 GI 偏高','Energy & GI of common staples; refined starch = higher GI']},
+ fiber:{i:'🌾',n:['高纖維','高纤维','High-Fiber Foods'],sh:['高纖','高纤','High Fiber'],v:'--fiber',s:['促進腸道蠕動、增加飽足感；記得搭配足夠水分','促进肠道蠕动、增加饱足感；记得搭配足够水分','Aids gut motility & satiety; drink enough water']},
+ protein:{i:'🍳',n:['高蛋白','高蛋白','High-Protein Foods'],sh:['高蛋白','高蛋白','High Protein'],v:'--protein',s:['肌肉修復與合成；葷素來源皆收錄','肌肉修复与合成；荤素来源皆收录','Muscle repair & synthesis; animal & plant sources']},
+ gi:{i:'🍎',n:['低GI','低GI','Low-GI Foods'],sh:['低GI','低GI','Low GI'],v:'--gi',s:['GI ≤55，飯後血糖較和緩；仍須考量份量（GL）','GI ≤55，饭后血糖较和缓；仍须考量分量（GL）','GI ≤55, gentler post-meal glucose; portions (GL) still matter']},
+ calc:{i:'🥛',n:['高鈣','高钙','High-Calcium Foods'],sh:['高鈣','高钙','High Ca'],v:'--calc',s:['骨骼牙齒基石；搭配維生素D吸收更佳','骨骼牙齿基石；搭配维生素D吸收更佳','Bones & teeth; better absorbed with vitamin D']},
+ iron:{i:'🥩',n:['高鐵','高铁','High-Iron Foods'],sh:['高鐵','高铁','High Iron'],v:'--iron',s:['血基質鐵吸收佳；植物鐵搭配維生素C','血基质铁吸收佳；植物铁搭配维生素C','Heme iron absorbs well; pair plant iron with vitamin C']},
+ vc:{i:'🍊',n:['高維C','高维C','High Vitamin-C Foods'],sh:['高維C','高维C','High Vit C'],v:'--vc',s:['抗氧化、助鐵吸收；怕熱怕光','抗氧化、助铁吸收；怕热怕光','Antioxidant, aids iron absorption; heat- & light-sensitive']},
+ fat:{i:'🥑',n:['好油脂','好油脂','Healthy-Fat Foods'],sh:['好油脂','好油脂','Good Fats'],v:'--fat',s:['單元不飽和與 Omega-3 為主；熱量高，份量留意','单元不饱和与 Omega-3 为主；热量高，分量留意','MUFA & omega-3 focused; calorie-dense, watch portions']},
+ light:{i:'🥒',n:['低熱量','低热量','Low-Calorie Foods'],sh:['低熱量','低热量','Low Cal'],v:'--light',s:['每100g ≤40 kcal 且高水分，體積大飽足感佳','每100g ≤40 kcal 且高水分，体积大饱足感佳','≤40 kcal per 100g, high water, big volume, filling']}
+};
+
+var STD={
+ starch:['主要醣類（熱量）來源；本表同時附 GI 對照','主要糖类（热量）来源；本表同时附 GI 对照','Main carbohydrate (energy) source; GI listed'],
+ fiber:['每100g膳食纖維顯著（穀豆類約 ≥6g；蔬菜中相對突出者）','每100g膳食纤维显著（谷豆类约 ≥6g；蔬菜中相对突出者）','Notable fiber per 100g (≥6g grains/beans; standout veggies)'],
+ protein:['每100g蛋白質 ≥12g（葷食），或優質植物蛋白（豆製品）','每100g蛋白质 ≥12g（荤食），或优质植物蛋白（豆制品）','≥12g protein per 100g (animal) or quality plant protein (soy)'],
+ gi:['升糖指數 GI ≤55','升糖指数 GI ≤55','Glycemic index ≤55'],
+ calc:['每100g鈣 ≥100mg 為良好來源、≥240mg 為豐富來源','每100g钙 ≥100mg 为良好来源、≥240mg 为丰富来源','≥100mg Ca/100g = good source; ≥240mg = rich'],
+ iron:['每100g鐵 ≥3mg；動物性（血基質鐵）吸收率較佳','每100g铁 ≥3mg；动物性（血基质铁）吸收率较佳','≥3mg Fe per 100g; heme (animal) iron absorbs better'],
+ vc:['每100g維生素C ≥30mg 為良好來源','每100g维生素C ≥30mg 为良好来源','≥30mg vitamin C per 100g = good source'],
+ fat:['以單元不飽和脂肪或 Omega-3 為主的油脂來源','以单元不饱和脂肪或 Omega-3 为主的油脂来源','Fat sources dominated by MUFA or omega-3'],
+ light:['每100g ≤40 kcal 且高水分、體積大飽足感佳','每100g ≤40 kcal 且高水分、体积大饱足感佳','≤40 kcal per 100g, high water, large volume, filling']
+};
+
+var TIPS=[
+{h:['補鐵','补铁','Iron'],b:['飯後攝取維生素C水果（芭樂、奇異果）促進植物性鐵吸收；茶與咖啡的單寧會抑制吸收，避免隨餐飲用。','饭后摄取维生素C水果（芭乐、奇异果）促进植物性铁吸收；茶与咖啡的单宁会抑制吸收，避免随餐饮用。','Eat vitamin-C fruits (guava, kiwi) after meals to boost plant-iron absorption; tannins in tea & coffee inhibit it—avoid with meals.']},
+{h:['補纖維','补纤维','Fiber'],b:['循序增量並多喝水，避免脹氣不適。','循序增量并多喝水，避免胀气不适。','Increase gradually and drink plenty of water to avoid bloating.']},
+{h:['穩血糖','稳血糖','Blood sugar'],b:['除 GI 外還須考量份量（升糖負荷 GL）；糊化程度越高 GI 越高（粥＞飯）。','除 GI 外还须考量分量（升糖负荷 GL）；糊化程度越高 GI 越高（粥＞饭）。','Consider portion (GL) beyond GI; more gelatinized = higher GI (porridge > rice).']},
+{h:['補鈣','补钙','Calcium'],b:['搭配維生素D（日曬、蛋黃、鮭魚）以利吸收。','搭配维生素D（日晒、蛋黄、鲑鱼）以利吸收。','Pair with vitamin D (sunlight, egg yolk, salmon) for absorption.']},
+{h:['維C保鮮','维C保鲜','Vitamin C'],b:['維生素C怕熱怕光，涼拌、快炒、現切現吃保留最多。','维生素C怕热怕光，凉拌、快炒、现切现吃保留最多。','Heat- & light-sensitive; raw, quick stir-fry, or freshly cut preserves most.']},
+{h:['堅果雖好','坚果虽好','Nuts'],b:['好油但熱量高，每日一份為宜（約 10~15 顆杏仁或 1 湯匙）。','好油但热量高，每日一份为宜（约 10~15 颗杏仁或 1 汤匙）。','Healthy fats but calorie-dense; ~1 serving daily (10–15 almonds or 1 tbsp).']},
+{h:['藥物留意','药物留意','Medication'],b:['葡萄柚與部分藥物（降血脂、免疫抑制劑等）有交互作用，服藥者先諮詢醫師。','葡萄柚与部分药物（降血脂、免疫抑制剂等）有交互作用，服药者先咨询医师。','Grapefruit interacts with some drugs (statins, immunosuppressants); consult your doctor first.']}
+];
+
+var SORTS=[['default','預設','预设','Default'],['name','名稱','名称','Name'],['tags','屬性數多→少','属性数多→少','Most attributes'],['kcalA','熱量 低→高','热量 低→高','Energy low→high'],['kcalD','熱量 高→低','热量 高→低','Energy high→low'],['prot','蛋白質 高→低','蛋白质 高→低','Protein high→low']];
+
+/* 額外營養標籤翻譯 */
+var XL={'膳食纖維':['膳食纤维','Fiber'],'維C':['维C','Vit C'],'鐵':['铁','Iron'],'鈣':['钙','Calcium'],'鉀':['钾','Potassium'],'鋅':['锌','Zinc'],'鎂':['镁','Magnesium'],'碘':['碘','Iodine'],'葉酸':['叶酸','Folate'],'水分':['水分','Water'],'維E':['维E','Vit E'],'維生素B1':['维生素B1','Vit B1'],'Omega-3':['Omega-3','Omega-3'],'GI':['GI','GI'],'單元不飽和':['单元不饱和','MUFA']};
+function xl(k){var e=XL[k];return e?(L===0?k:e[L-1]):k;}
+function xv(v){if(L===0)return v;if(L===1)return v.replace(/約/g,'约').replace(/豐富/g,'丰富');return v.replace(/約\s*/g,'≈ ').replace(/豐富/g,'rich');}
+
+/* ════ 食物資料庫 n/d = [繁,简,EN] ════ */
 var F=[
-{n:'白米飯（熟）',t:['starch'],d:'精製澱粉，升糖快；搭配蔬菜與蛋白質平衡',k:150,p:3,f:0.3,c:33,x:[['GI','約 80']]},
-{n:'糙米（生）',t:['starch','fiber','gi'],d:'保留麩皮胚芽，纖維、B群、鎂皆優於白米',k:360,p:7.5,f:2.7,c:75,x:[['膳食纖維','3.5 g'],['GI','約 55']]},
-{n:'燕麥片（乾）',t:['starch','fiber','gi','protein'],d:'β-葡聚醣助血脂血糖控制；蛋白密度在穀類中數一數二',k:380,p:13,f:7,c:56,x:[['膳食纖維','10 g'],['GI','約 55']]},
-{n:'全麥麵包',t:['starch','fiber'],d:'挑「全麥麵粉」排在成分首位者',k:250,p:10,f:4,c:42,x:[['膳食纖維','6 g'],['GI','55~70']]},
-{n:'白吐司',t:['starch'],d:'精製澱粉 GI 偏高、纖維少',k:260,p:9,f:4.3,c:50,x:[['膳食纖維','3 g'],['GI','約 70']]},
-{n:'蕎麥麵（乾）',t:['starch','gi','protein'],d:'澱粉消化慢，含芸香苷',k:340,p:12,f:2.5,c:70,x:[['膳食纖維','4 g'],['GI','50~60']]},
-{n:'全麥義大利麵（乾）',t:['starch','fiber','gi','protein'],d:'煮到彈牙（al dente）GI 更和緩',k:350,p:13,f:2.5,c:68,x:[['膳食纖維','9 g'],['GI','45~50']]},
-{n:'冬粉（乾）',t:['starch','gi'],d:'綠豆澱粉製，GI 低的麵食選擇',k:350,p:0.6,f:0.1,c:85,x:[['GI','約 32']]},
-{n:'地瓜（蒸）',t:['starch','fiber','gi'],d:'高鉀、β-胡蘿蔔素；蒸比烤 GI 低',k:105,p:1.6,f:0.2,c:25,x:[['膳食纖維','3 g'],['GI','約 55']]},
-{n:'馬鈴薯（蒸）',t:['starch'],d:'冷藏後抗性澱粉增加，升糖較和緩',k:85,p:2,f:0.1,c:17,x:[['維C','13 mg'],['GI','65~90']]},
-{n:'玉米（鮮）',t:['starch','fiber'],d:'葉黃素與玉米黃素護眼',k:95,p:3.3,f:1.3,c:21,x:[['膳食纖維','2.4 g'],['GI','約 52']]},
-{n:'芋頭（蒸）',t:['starch'],d:'鬆軟高澱粉，注意份量',k:125,p:2.2,f:0.2,c:27,x:[['GI','約 65']]},
-{n:'山藥（鮮）',t:['starch','gi'],d:'黏液蛋白；GI 中等偏低',k:85,p:2,f:0.2,c:19,x:[['GI','約 50']]},
-{n:'黑豆（乾）',t:['fiber','protein','gi'],d:'蛋白纖維兼備，含花青素、葉酸',k:360,p:34,f:15,c:30,x:[['膳食纖維','15 g'],['GI','約 30']]},
-{n:'黃豆（乾）',t:['protein','fiber'],d:'完全植物蛋白代表，含大豆異黃酮',k:400,p:35,f:16,c:30,x:[['膳食纖維','10 g']]},
-{n:'毛豆',t:['fiber','protein'],d:'葉酸、鉀豐富，零膽固醇',k:120,p:11,f:5,c:12,x:[['膳食纖維','5 g']]},
-{n:'紅豆（乾）',t:['fiber','gi','iron'],d:'鉀與皂素利水；鐵量也不錯',k:330,p:20,f:1,c:60,x:[['膳食纖維','13 g'],['鐵','6 mg'],['GI','約 30']]},
-{n:'綠豆（乾）',t:['fiber','gi'],d:'抗性澱粉多，飯後血糖平穩',k:330,p:22,f:1.2,c:60,x:[['膳食纖維','15 g'],['GI','約 30']]},
-{n:'鷹嘴豆（乾）',t:['starch','fiber','protein','gi'],d:'打泥、燉煮兩相宜；主食與蛋白兼備',k:360,p:19,f:6,c:60,x:[['膳食纖維','12 g'],['GI','約 30']]},
-{n:'藜麥（熟）',t:['starch','gi','fiber'],d:'罕見的完全蛋白穀類，礦物質均衡',k:120,p:4.4,f:1.9,c:21,x:[['膳食纖維','2.8 g'],['GI','約 53']]},
-{n:'奇亞籽',t:['fiber','fat'],d:'纖維比例極高，含植物性 Omega-3',k:490,p:17,f:31,c:42,x:[['膳食纖維','34 g'],['Omega-3','18 g']]},
-{n:'亞麻籽',t:['fiber','fat'],d:'木酚素豐富；現磨現吃防氧化',k:530,p:18,f:42,c:29,x:[['膳食纖維','27 g'],['Omega-3','22 g']]},
-{n:'花椰菜（白）',t:['fiber','vc'],d:'十字花科，熱量極低',k:25,p:1.9,f:0.3,c:5,x:[['膳食纖維','2 g'],['維C','48 mg']]},
-{n:'青花菜（綠）',t:['fiber','vc'],d:'蘿蔔硫素，維C 亮眼',k:34,p:2.8,f:0.4,c:7,x:[['膳食纖維','2.6 g'],['維C','80 mg']]},
-{n:'地瓜葉',t:['fiber','light'],d:'深綠葉菜，β-胡蘿蔔素豐富',k:30,p:3,f:0.4,c:5,x:[['膳食纖維','3 g']]},
-{n:'秋葵',t:['fiber','light'],d:'黏液富含果膠，顧腸道',k:35,p:2,f:0.2,c:7,x:[['膳食纖維','3.2 g']]},
-{n:'木耳（鮮）',t:['fiber','light'],d:'水溶性纖維與多醣體',k:25,p:1.1,f:0.2,c:6,x:[['膳食纖維','5 g']]},
-{n:'香菇（鮮）',t:['fiber','light'],d:'多醣體；日曬乾香菇維D大增',k:35,p:2.2,f:0.3,c:7,x:[['膳食纖維','2.5 g']]},
-{n:'金針菇',t:['fiber','light'],d:'低熱量菇類，纖維比例高',k:35,p:2.7,f:0.3,c:7,x:[['膳食纖維','2.6 g']]},
-{n:'竹筍',t:['fiber','light'],d:'高纖低卡，涼拌熱炒皆宜',k:30,p:2.2,f:0.3,c:5,x:[['膳食纖維','2.4 g']]},
-{n:'火龍果（紅肉）',t:['fiber','gi'],d:'甜菜紅素；籽多纖維多',k:50,p:1.1,f:0.4,c:12,x:[['膳食纖維','3 g'],['GI','約 45']]},
-{n:'百香果',t:['fiber'],d:'連籽纖維高，酸甜開胃',k:80,p:2.2,f:0.7,c:18,x:[['膳食纖維','10 g'],['維C','30 mg']]},
-{n:'黑棗（乾）',t:['fiber'],d:'山梨醇與纖維，助排便',k:240,p:2.2,f:0.4,c:60,x:[['膳食纖維','7 g']]},
-{n:'奇異果',t:['vc','fiber','gi'],d:'蛋白酶助消化；金圓頭維C更高',k:60,p:1.1,f:0.5,c:14,x:[['維C','90 mg'],['膳食纖維','3 g'],['GI','約 50']]},
-{n:'梨子',t:['gi','fiber'],d:'水分足、脆甜低 GI',k:45,p:0.4,f:0.2,c:11,x:[['膳食纖維','3 g'],['GI','約 35']]},
-{n:'雞蛋（全蛋）',t:['protein'],d:'完全蛋白質、膽鹼、B12',k:143,p:12.6,f:9.5,c:0.7,x:[['鐵','1.8 mg']]},
-{n:'雞胸肉（生）',t:['protein'],d:'白肉低脂，菸鹼酸、B6 豐富',k:110,p:23,f:1.5,c:0},
-{n:'雞腿肉（去皮，生）',t:['protein'],d:'口感較潤，去皮更精瘦（帶皮約 180 kcal）',k:130,p:19,f:5,c:0},
-{n:'豬小里肌',t:['protein'],d:'維生素B1 居肉類之冠',k:145,p:20,f:6,c:0,x:[['維生素B1','0.9 mg']]},
-{n:'瘦牛肉（生）',t:['protein','iron'],d:'血基質鐵、鋅、B12',k:170,p:22,f:8,c:0,x:[['鐵','2.6 mg'],['鋅','4 mg']]},
-{n:'鮭魚（生）',t:['protein','fat'],d:'EPA／DHA 與維生素D',k:200,p:20,f:13,c:0,x:[['Omega-3','2.3 g']]},
-{n:'鯖魚',t:['protein','fat'],d:'平價小型魚，Omega-3 密度高',k:206,p:20,f:13,c:0,x:[['Omega-3','2.5 g']]},
-{n:'鮪魚（水煮罐頭）',t:['protein'],d:'水漬比油漬熱量低一半',k:115,p:25,f:1,c:0},
-{n:'白蝦（生）',t:['protein'],d:'低脂高蛋白，含蝦紅素',k:100,p:22,f:1,c:0},
-{n:'透抽／花枝',t:['protein'],d:'零碳水低脂的軟體海鮮',k:70,p:15,f:1,c:1},
-{n:'文蛤',t:['iron','protein'],d:'鐵與 B12 豐富的低脂海鮮',k:50,p:8,f:1,c:2,x:[['鐵','5 mg']]},
-{n:'板豆腐',t:['protein','calc'],d:'石膏凝固鈣較多；零膽固醇',k:85,p:9,f:5,c:2,x:[['鈣','140 mg']]},
-{n:'嫩豆腐',t:['protein'],d:'鈣與蛋白皆低於板豆腐',k:50,p:5,f:3,c:2,x:[['鈣','50 mg']]},
-{n:'豆干',t:['protein'],d:'濃縮豆製品，素食蛋白主力',k:140,p:18,f:7,c:6,x:[['鈣','130 mg']]},
-{n:'腐竹（乾豆皮）',t:['protein'],d:'濃縮蛋白，涼拌入湯皆可',k:460,p:45,f:22,c:20},
-{n:'無糖豆漿',t:['protein','gi'],d:'每杯 240ml 約 7g 蛋白；乳糖不耐友善',k:35,p:3.5,f:1.5,c:3,u:'ml'},
-{n:'希臘優格（無糖）',t:['protein','calc'],d:'濾除乳清，蛋白濃度倍增',k:60,p:10,f:1,c:4,x:[['鈣','110 mg']]},
-{n:'花生（生）',t:['protein','fat'],d:'蛋白油脂兼備，GI 極低',k:560,p:26,f:49,c:16},
-{n:'蘋果',t:['gi'],d:'果膠延緩糖分吸收',k:50,p:0.3,f:0.2,c:13,x:[['膳食纖維','2.4 g'],['GI','約 38']]},
-{n:'櫻桃',t:['gi'],d:'花青素豐富，GI 極低',k:60,p:1.1,f:0.2,c:14,x:[['GI','約 22']]},
-{n:'藍莓',t:['gi'],d:'花青素抗氧化',k:57,p:0.7,f:0.3,c:13,x:[['膳食纖維','2.4 g'],['GI','約 53']]},
-{n:'葡萄',t:['gi'],d:'適量為宜（一次約 10~13 顆）',k:65,p:0.6,f:0.2,c:16,x:[['GI','約 43']]},
-{n:'香蕉',t:['gi'],d:'越熟 GI 越高',k:90,p:1.1,f:0.2,c:22,x:[['鉀','290 mg'],['GI','50~62']]},
-{n:'柳橙',t:['vc','gi'],d:'果肉纖維＋類黃酮',k:45,p:0.9,f:0.2,c:11,x:[['維C','53 mg'],['GI','約 43']]},
-{n:'葡萄柚',t:['vc','gi'],d:'服藥者注意柚苷交互作用',k:35,p:0.8,f:0.1,c:8,x:[['維C','35 mg'],['GI','約 25']]},
-{n:'草莓',t:['vc','gi'],d:'維C 密度高的漿果',k:35,p:0.8,f:0.3,c:7,x:[['維C','60 mg'],['GI','約 40']]},
-{n:'無糖優格',t:['calc','gi'],d:'發酵特性升糖和緩，含益生菌',k:60,p:3.5,f:3,c:5,x:[['鈣','110 mg'],['GI','≤ 35']]},
-{n:'燕麥奶（原味）',t:['gi'],d:'保留β-葡聚醣；留意加糖款',k:45,p:1,f:1.5,c:7,u:'ml'},
-{n:'牛奶',t:['calc'],d:'鈣磷比佳、吸收率好',k:65,p:3.2,f:3.7,c:4.8,x:[['鈣','100 mg']],u:'ml'},
-{n:'切達起司',t:['calc'],d:'濃縮乳品；鈉與脂肪高宜適量',k:400,p:25,f:33,c:1.3,x:[['鈣','700 mg']]},
-{n:'小魚乾',t:['calc'],d:'連骨吃，鈣密度極高',k:300,p:65,f:5,c:5,x:[['鈣','2000 mg']]},
-{n:'黑芝麻（磨粉）',t:['calc','iron'],d:'鈣鐵雙補，磨碎吸收佳',k:550,p:18,f:47,c:20,x:[['鈣','1200 mg'],['鐵','10 mg']]},
-{n:'芥藍菜',t:['calc'],d:'深綠菜中鈣突出、草酸低',k:25,p:2.5,f:0.4,c:4,x:[['鈣','180 mg']]},
-{n:'紅莧菜',t:['iron','calc'],d:'鐵與鈣都亮眼',k:20,p:2.2,f:0.3,c:3,x:[['鐵','11 mg'],['鈣','190 mg']]},
-{n:'青江菜',t:['calc','light'],d:'鈣良好來源且熱量低',k:20,p:1.5,f:0.3,c:3,x:[['鈣','100 mg']]},
-{n:'豬肝',t:['iron'],d:'血基質鐵吸收佳；每週 1~2 次為宜',k:120,p:20,f:4,c:3,x:[['鐵','10 mg']]},
-{n:'豬血／鴨血',t:['iron'],d:'低脂低熱量的補鐵王',k:30,p:10,f:0.3,c:1,x:[['鐵','15~28 mg']]},
-{n:'牡蠣',t:['iron'],d:'鐵、鋅與蛋白兼具',k:70,p:9,f:2,c:4,x:[['鐵','7 mg'],['鋅','10 mg']]},
-{n:'紫菜（乾）',t:['iron'],d:'湯品撒一撮就有感；每次約 3~5g',k:250,p:25,f:1,c:45,x:[['鐵','35 mg'],['碘','豐富']]},
-{n:'菠菜',t:['iron','light'],d:'植物性鐵＋葉酸、葉黃素',k:20,p:2.2,f:0.4,c:3,x:[['鐵','2.9 mg']]},
-{n:'南瓜籽',t:['fat','iron'],d:'鎂與鐵都高',k:560,p:25,f:45,c:15,x:[['鐵','8 mg'],['鎂','260 mg']]},
-{n:'芭樂',t:['vc','fiber','gi'],d:'國民維C 王，CP 值最高',k:40,p:1.1,f:0.4,c:10,x:[['維C','100 mg'],['膳食纖維','4 g'],['GI','約 30']]},
-{n:'紅甜椒',t:['vc'],d:'維C 前段班（生食保留完整）；青椒約 88mg',k:30,p:1,f:0.3,c:6,x:[['維C','120 mg']]},
-{n:'木瓜',t:['vc'],d:'木瓜酵素助蛋白消化',k:45,p:0.6,f:0.3,c:11,x:[['維C','60 mg']]},
-{n:'鳳梨',t:['vc'],d:'鳳梨酵素助消化；GI 中等',k:50,p:0.5,f:0.2,c:13,x:[['維C','45 mg'],['GI','約 60']]},
-{n:'聖女番茄',t:['vc','light'],d:'小顆維C密度高於大番茄',k:25,p:1,f:0.2,c:5,x:[['維C','40 mg']]},
-{n:'苦瓜',t:['vc','light'],d:'熱量極低、維C 高',k:17,p:1,f:0.1,c:3,x:[['維C','60 mg']]},
-{n:'檸檬',t:['vc'],d:'汁入菜泡水；皮含檸檬烯',k:30,p:1.1,f:0.3,c:9,x:[['維C','50 mg']]},
-{n:'特級初榨橄欖油',t:['fat'],d:'多酚抗氧化，涼拌為主',k:884,p:0,f:100,c:0,x:[['單元不飽和','73 g']]},
-{n:'苦茶油',t:['fat'],d:'單元不飽和高、發煙點高',k:884,p:0,f:100,c:0,x:[['單元不飽和','80 g']]},
-{n:'酪梨',t:['fat','fiber'],d:'好油的唯一直接水果來源',k:120,p:2,f:10,c:6,x:[['膳食纖維','6 g']]},
-{n:'核桃',t:['fat'],d:'植物性 Omega-3（ALA）之冠',k:650,p:15,f:60,c:15,x:[['Omega-3','9 g']]},
-{n:'杏仁',t:['fat','fiber'],d:'維E 豐富',k:580,p:21,f:50,c:18,x:[['維E','26 mg'],['膳食纖維','12 g']]},
-{n:'腰果',t:['fat'],d:'質地滑順，鐵鋅也不少',k:560,p:18,f:46,c:27,x:[['鐵','6 mg'],['鋅','5 mg']]},
-{n:'開心果',t:['fat'],d:'蛋白相對高，帶殼好控制份量',k:560,p:20,f:45,c:20,x:[['膳食纖維','10 g']]},
-{n:'冬瓜',t:['light'],d:'熱量超低，湯品好基底',k:15,p:0.4,f:0.2,c:3,x:[['水分','96 %']]},
-{n:'小黃瓜',t:['light'],d:'水分約 95%',k:15,p:0.7,f:0.1,c:3,x:[['水分','95 %']]},
-{n:'芹菜',t:['light'],d:'鉀與纖維，脆口零嘴',k:15,p:0.7,f:0.2,c:3,x:[['膳食纖維','1.6 g']]},
-{n:'絲瓜',t:['light'],d:'水分足、清甜',k:20,p:1,f:0.2,c:4},
-{n:'白蘿蔔',t:['light'],d:'澱粉酶助消化（生食）',k:20,p:0.9,f:0.1,c:4,x:[['維C','15 mg']]},
-{n:'高麗菜',t:['light'],d:'平價十字花科，維C 也不少',k:23,p:1.4,f:0.2,c:5,x:[['維C','36 mg']]},
-{n:'空心菜',t:['light'],d:'夏季常見葉菜',k:20,p:2.2,f:0.3,c:3,x:[['膳食纖維','2 g']]},
-{n:'綠蘆筍',t:['light'],d:'葉酸良好來源',k:20,p:2.2,f:0.1,c:3,x:[['葉酸','52 μg']]},
-{n:'洋蔥',t:['light'],d:'槲皮素＋果寡糖（益生元）',k:40,p:1,f:0.1,c:9,x:[['GI','約 10']]},
-{n:'大番茄',t:['light'],d:'茄紅素煮過更易吸收',k:18,p:0.9,f:0.2,c:4,x:[['維C','21 mg']]},
-{n:'海帶（生）',t:['light'],d:'碘豐富；甲狀腺疾病者注意',k:30,p:1,f:0.1,c:5,x:[['碘','豐富']]},
-{n:'西瓜',t:['light'],d:'GI 高（約 75）但一次含醣量低',k:30,p:0.6,f:0.2,c:7,x:[['GI','約 75'],['水分','92 %']]},
-{n:'愛玉／仙草（無糖）',t:['light'],d:'近乎零卡的前提是別加糖',k:2,p:0,f:0,c:0.5},
-{n:'黑咖啡',t:['light'],d:'綠原酸抗氧化；咖啡因適量',k:2,p:0.1,f:0,c:0},
-{n:'無糖綠茶',t:['light'],d:'兒茶素；咖啡因低於咖啡',k:1,p:0,f:0,c:0}
+{n:['白米飯（熟）','白米饭（熟）','White rice (cooked)'],t:['starch'],d:['精製澱粉，升糖快；搭配蔬菜與蛋白質平衡','精制淀粉，升糖快；搭配蔬菜与蛋白质平衡','Refined starch, fast glucose rise; pair with veggies & protein'],k:150,p:3,f:0.3,c:33,x:[['GI','約 80']]},
+{n:['糙米（生）','糙米（生）','Brown rice (raw)'],t:['starch','fiber','gi'],d:['保留麩皮胚芽，纖維、B群、鎂皆優於白米','保留麸皮胚芽，纤维、B群、镁皆优于白米','Bran & germ kept; more fiber, B vitamins & magnesium than white rice'],k:360,p:7.5,f:2.7,c:75,x:[['膳食纖維','3.5 g'],['GI','約 55']]},
+{n:['燕麥片（乾）','燕麦片（干）','Rolled oats (dry)'],t:['starch','fiber','gi','protein'],d:['β-葡聚醣助血脂血糖控制；蛋白密度在穀類中數一數二','β-葡聚糖助血脂血糖控制；蛋白密度在谷类中数一数二','Beta-glucan helps lipids & glucose; top protein among grains'],k:380,p:13,f:7,c:56,x:[['膳食纖維','10 g'],['GI','約 55']]},
+{n:['全麥麵包','全麦面包','Whole wheat bread'],t:['starch','fiber'],d:['挑「全麥麵粉」排在成分首位者','挑“全麦面粉”排在成分首位者','Pick ones listing whole-wheat flour first'],k:250,p:10,f:4,c:42,x:[['膳食纖維','6 g'],['GI','55~70']]},
+{n:['白吐司','白吐司','White toast'],t:['starch'],d:['精製澱粉 GI 偏高、纖維少','精制淀粉 GI 偏高、纤维少','Refined; higher GI, little fiber'],k:260,p:9,f:4.3,c:50,x:[['膳食纖維','3 g'],['GI','約 70']]},
+{n:['蕎麥麵（乾）','荞麦面（干）','Soba noodles (dry)'],t:['starch','gi','protein'],d:['澱粉消化慢，含芸香苷','淀粉消化慢，含芸香苷','Slow-digesting starch; contains rutin'],k:340,p:12,f:2.5,c:70,x:[['膳食纖維','4 g'],['GI','50~60']]},
+{n:['全麥義大利麵（乾）','全麦意大利面（干）','Whole wheat pasta (dry)'],t:['starch','fiber','gi','protein'],d:['煮到彈牙（al dente）GI 更和緩','煮到弹牙（al dente）GI 更和缓','Cook al dente for gentler GI'],k:350,p:13,f:2.5,c:68,x:[['膳食纖維','9 g'],['GI','45~50']]},
+{n:['冬粉（乾）','冬粉（干）','Glass noodles (dry)'],t:['starch','gi'],d:['綠豆澱粉製，GI 低的麵食選擇','绿豆淀粉制，GI 低的面食选择','Mung-bean starch; low-GI noodle'],k:350,p:0.6,f:0.1,c:85,x:[['GI','約 32']]},
+{n:['地瓜（蒸）','地瓜（蒸）','Sweet potato (steamed)'],t:['starch','fiber','gi'],d:['高鉀、β-胡蘿蔔素；蒸比烤 GI 低','高钾、β-胡萝卜素；蒸比烤 GI 低','Potassium & beta-carotene; steamed keeps GI lower than baked'],k:105,p:1.6,f:0.2,c:25,x:[['膳食纖維','3 g'],['GI','約 55']]},
+{n:['馬鈴薯（蒸）','马铃薯（蒸）','Potato (steamed)'],t:['starch'],d:['冷藏後抗性澱粉增加，升糖較和緩','冷藏后抗性淀粉增加，升糖较和缓','Chilling raises resistant starch; gentler glucose'],k:85,p:2,f:0.1,c:17,x:[['維C','13 mg'],['GI','65~90']]},
+{n:['玉米（鮮）','玉米（鲜）','Sweet corn (fresh)'],t:['starch','fiber'],d:['葉黃素與玉米黃素護眼','叶黄素与玉米黄素护眼','Lutein & zeaxanthin for eyes'],k:95,p:3.3,f:1.3,c:21,x:[['膳食纖維','2.4 g'],['GI','約 52']]},
+{n:['芋頭（蒸）','芋头（蒸）','Taro (steamed)'],t:['starch'],d:['鬆軟高澱粉，注意份量','松软高淀粉，注意分量','Soft & starchy—watch portions'],k:125,p:2.2,f:0.2,c:27,x:[['GI','約 65']]},
+{n:['山藥（鮮）','山药（鲜）','Chinese yam (fresh)'],t:['starch','gi'],d:['黏液蛋白；GI 中等偏低','黏液蛋白；GI 中等偏低','Mucin protein; moderate-low GI'],k:85,p:2,f:0.2,c:19,x:[['GI','約 50']]},
+{n:['黑豆（乾）','黑豆（干）','Black beans (dry)'],t:['fiber','protein','gi'],d:['蛋白纖維兼備，含花青素、葉酸','蛋白纤维兼备，含花青素、叶酸','Protein + fiber; anthocyanins & folate'],k:360,p:34,f:15,c:30,x:[['膳食纖維','15 g'],['GI','約 30']]},
+{n:['黃豆（乾）','黄豆（干）','Soybeans (dry)'],t:['protein','fiber'],d:['完全植物蛋白代表，含大豆異黃酮','完全植物蛋白代表，含大豆异黄酮','Complete plant protein; isoflavones'],k:400,p:35,f:16,c:30,x:[['膳食纖維','10 g']]},
+{n:['毛豆','毛豆','Edamame'],t:['fiber','protein'],d:['葉酸、鉀豐富，零膽固醇','叶酸、钾丰富，零胆固醇','Folate & potassium; zero cholesterol'],k:120,p:11,f:5,c:12,x:[['膳食纖維','5 g']]},
+{n:['紅豆（乾）','红豆（干）','Red beans (dry)'],t:['fiber','gi','iron'],d:['鉀與皂素利水；鐵量也不錯','钾与皂素利水；铁量也不错','Potassium & saponins; decent iron'],k:330,p:20,f:1,c:60,x:[['膳食纖維','13 g'],['鐵','6 mg'],['GI','約 30']]},
+{n:['綠豆（乾）','绿豆（干）','Mung beans (dry)'],t:['fiber','gi'],d:['抗性澱粉多，飯後血糖平穩','抗性淀粉多，饭后血糖平稳','Resistant starch; steady post-meal glucose'],k:330,p:22,f:1.2,c:60,x:[['膳食纖維','15 g'],['GI','約 30']]},
+{n:['鷹嘴豆（乾）','鹰嘴豆（干）','Chickpeas (dry)'],t:['starch','fiber','protein','gi'],d:['打泥、燉煮兩相宜；主食與蛋白兼備','打泥、炖煮两相宜；主食与蛋白兼备','Puree or stew; staple + protein in one'],k:360,p:19,f:6,c:60,x:[['膳食纖維','12 g'],['GI','約 30']]},
+{n:['藜麥（熟）','藜麦（熟）','Quinoa (cooked)'],t:['starch','gi','fiber'],d:['罕見的完全蛋白穀類，礦物質均衡','罕见的完全蛋白谷类，矿物质均衡','Rare complete-protein grain; balanced minerals'],k:120,p:4.4,f:1.9,c:21,x:[['膳食纖維','2.8 g'],['GI','約 53']]},
+{n:['奇亞籽','奇亚籽','Chia seeds'],t:['fiber','fat'],d:['纖維比例極高，含植物性 Omega-3','纤维比例极高，含植物性 Omega-3','Extreme fiber; plant omega-3'],k:490,p:17,f:31,c:42,x:[['膳食纖維','34 g'],['Omega-3','18 g']]},
+{n:['亞麻籽','亚麻籽','Flaxseeds'],t:['fiber','fat'],d:['木酚素豐富；現磨現吃防氧化','木酚素丰富；现磨现吃防氧化','Rich in lignans; grind fresh to avoid oxidation'],k:530,p:18,f:42,c:29,x:[['膳食纖維','27 g'],['Omega-3','22 g']]},
+{n:['花椰菜（白）','花椰菜（白）','Cauliflower'],t:['fiber','vc'],d:['十字花科，熱量極低','十字花科，热量极低','Cruciferous; ultra low calorie'],k:25,p:1.9,f:0.3,c:5,x:[['膳食纖維','2 g'],['維C','48 mg']]},
+{n:['青花菜（綠）','青花菜（绿）','Broccoli'],t:['fiber','vc'],d:['蘿蔔硫素，維C 亮眼','萝卜硫素，维C 亮眼','Sulforaphane; strong vitamin C'],k:34,p:2.8,f:0.4,c:7,x:[['膳食纖維','2.6 g'],['維C','80 mg']]},
+{n:['地瓜葉','地瓜叶','Sweet potato leaves'],t:['fiber','light'],d:['深綠葉菜，β-胡蘿蔔素豐富','深绿叶菜，β-胡萝卜素丰富','Dark leafy green; beta-carotene'],k:30,p:3,f:0.4,c:5,x:[['膳食纖維','3 g']]},
+{n:['秋葵','秋葵','Okra'],t:['fiber','light'],d:['黏液富含果膠，顧腸道','黏液富含果胶，顾肠道','Pectin-rich mucilage; gut-friendly'],k:35,p:2,f:0.2,c:7,x:[['膳食纖維','3.2 g']]},
+{n:['木耳（鮮）','木耳（鲜）','Wood ear mushroom (fresh)'],t:['fiber','light'],d:['水溶性纖維與多醣體','水溶性纤维与多糖体','Soluble fiber & polysaccharides'],k:25,p:1.1,f:0.2,c:6,x:[['膳食纖維','5 g']]},
+{n:['香菇（鮮）','香菇（鲜）','Shiitake (fresh)'],t:['fiber','light'],d:['多醣體；日曬乾香菇維D大增','多糖体；日晒干香菇维D大增','Polysaccharides; sun-dried boosts vitamin D'],k:35,p:2.2,f:0.3,c:7,x:[['膳食纖維','2.5 g']]},
+{n:['金針菇','金针菇','Enoki mushrooms'],t:['fiber','light'],d:['低熱量菇類，纖維比例高','低热量菇类，纤维比例高','Low-calorie, fibrous mushroom'],k:35,p:2.7,f:0.3,c:7,x:[['膳食纖維','2.6 g']]},
+{n:['竹筍','竹笋','Bamboo shoots'],t:['fiber','light'],d:['高纖低卡，涼拌熱炒皆宜','高纤低卡，凉拌热炒皆宜','High fiber, low calorie; great hot or cold'],k:30,p:2.2,f:0.3,c:5,x:[['膳食纖維','2.4 g']]},
+{n:['火龍果（紅肉）','火龙果（红肉）','Dragon fruit (red)'],t:['fiber','gi'],d:['甜菜紅素；籽多纖維多','甜菜红素；籽多纤维多','Betalains; seedy & fibrous'],k:50,p:1.1,f:0.4,c:12,x:[['膳食纖維','3 g'],['GI','約 45']]},
+{n:['百香果','百香果','Passion fruit'],t:['fiber'],d:['連籽纖維高，酸甜開胃','连籽纤维高，酸甜开胃','Fibrous with seeds; sweet-tart'],k:80,p:2.2,f:0.7,c:18,x:[['膳食纖維','10 g'],['維C','30 mg']]},
+{n:['黑棗（乾）','黑枣（干）','Prunes (dried)'],t:['fiber'],d:['山梨醇與纖維，助排便','山梨醇与纤维，助排便','Sorbitol + fiber aid regularity'],k:240,p:2.2,f:0.4,c:60,x:[['膳食纖維','7 g']]},
+{n:['奇異果','奇异果','Kiwi'],t:['vc','fiber','gi'],d:['蛋白酶助消化；金圓頭維C更高','蛋白酶助消化；金圆头维C更高','Protease aids digestion; golden kiwi = more vitamin C'],k:60,p:1.1,f:0.5,c:14,x:[['維C','90 mg'],['膳食纖維','3 g'],['GI','約 50']]},
+{n:['梨子','梨子','Pear'],t:['gi','fiber'],d:['水分足、脆甜低 GI','水分足、脆甜低 GI','Watery, crisp, low GI'],k:45,p:0.4,f:0.2,c:11,x:[['膳食纖維','3 g'],['GI','約 35']]},
+{n:['雞蛋（全蛋）','鸡蛋（全蛋）','Chicken egg (whole)'],t:['protein'],d:['完全蛋白質、膽鹼、B12','完全蛋白质、胆碱、B12','Complete protein; choline & B12'],k:143,p:12.6,f:9.5,c:0.7,x:[['鐵','1.8 mg']]},
+{n:['雞胸肉（生）','鸡胸肉（生）','Chicken breast (raw)'],t:['protein'],d:['白肉低脂，菸鹼酸、B6 豐富','白肉低脂，烟酸、B6 丰富','Lean white meat; niacin & B6'],k:110,p:23,f:1.5,c:0},
+{n:['雞腿肉（去皮，生）','鸡腿肉（去皮，生）','Chicken thigh (skinless, raw)'],t:['protein'],d:['口感較潤，去皮更精瘦（帶皮約 180 kcal）','口感较润，去皮更精瘦（带皮约 180 kcal）','Juicier; skinless is leaner (~180 kcal with skin)'],k:130,p:19,f:5,c:0},
+{n:['豬小里肌','猪小里肌','Pork tenderloin'],t:['protein'],d:['維生素B1 居肉類之冠','维生素B1 居肉类之冠','Highest vitamin B1 among meats'],k:145,p:20,f:6,c:0,x:[['維生素B1','0.9 mg']]},
+{n:['瘦牛肉（生）','瘦牛肉（生）','Lean beef (raw)'],t:['protein','iron'],d:['血基質鐵、鋅、B12','血基质铁、锌、B12','Heme iron, zinc, B12'],k:170,p:22,f:8,c:0,x:[['鐵','2.6 mg'],['鋅','4 mg']]},
+{n:['鮭魚（生）','鲑鱼（生）','Salmon (raw)'],t:['protein','fat'],d:['EPA／DHA 與維生素D','EPA／DHA 与维生素D','EPA/DHA & vitamin D'],k:200,p:20,f:13,c:0,x:[['Omega-3','2.3 g']]},
+{n:['鯖魚','鲭鱼','Mackerel'],t:['protein','fat'],d:['平價小型魚，Omega-3 密度高','平价小型鱼，Omega-3 密度高','Affordable small fish; dense omega-3'],k:206,p:20,f:13,c:0,x:[['Omega-3','2.5 g']]},
+{n:['鮪魚（水煮罐頭）','鲔鱼（水煮罐头）','Canned tuna (in water)'],t:['protein'],d:['水漬比油漬熱量低一半','水渍比油渍热量低一半','Water-packed = half the calories of oil-packed'],k:115,p:25,f:1,c:0},
+{n:['白蝦（生）','白虾（生）','White shrimp (raw)'],t:['protein'],d:['低脂高蛋白，含蝦紅素','低脂高蛋白，含虾红素','Lean protein; astaxanthin'],k:100,p:22,f:1,c:0},
+{n:['透抽／花枝','透抽／花枝','Squid'],t:['protein'],d:['零碳水低脂的軟體海鮮','零碳水低脂的软体海鲜','Zero-carb, low-fat seafood'],k:70,p:15,f:1,c:1},
+{n:['文蛤','文蛤','Clams'],t:['iron','protein'],d:['鐵與 B12 豐富的低脂海鮮','铁与 B12 丰富的低脂海鲜','Iron & B12 rich; low fat'],k:50,p:8,f:1,c:2,x:[['鐵','5 mg']]},
+{n:['板豆腐','板豆腐','Firm tofu'],t:['protein','calc'],d:['石膏凝固鈣較多；零膽固醇','石膏凝固钙较多；零胆固醇','Gypsum-set, more calcium; zero cholesterol'],k:85,p:9,f:5,c:2,x:[['鈣','140 mg']]},
+{n:['嫩豆腐','嫩豆腐','Soft tofu'],t:['protein'],d:['鈣與蛋白皆低於板豆腐','钙与蛋白皆低于板豆腐','Less calcium & protein than firm tofu'],k:50,p:5,f:3,c:2,x:[['鈣','50 mg']]},
+{n:['豆干','豆干','Dried tofu'],t:['protein'],d:['濃縮豆製品，素食蛋白主力','浓缩豆制品，素食蛋白主力','Concentrated soy; key vegan protein'],k:140,p:18,f:7,c:6,x:[['鈣','130 mg']]},
+{n:['腐竹（乾豆皮）','腐竹（干豆皮）','Dried tofu skin'],t:['protein'],d:['濃縮蛋白，涼拌入湯皆可','浓缩蛋白，凉拌入汤皆可','Concentrated protein; salads or soups'],k:460,p:45,f:22,c:20},
+{n:['無糖豆漿','无糖豆浆','Unsweetened soy milk'],t:['protein','gi'],d:['每杯 240ml 約 7g 蛋白；乳糖不耐友善','每杯 240ml 约 7g 蛋白；乳糖不耐友善','~7g protein per 240ml cup; lactose-free'],k:35,p:3.5,f:1.5,c:3,u:'ml'},
+{n:['希臘優格（無糖）','希腊酸奶（无糖）','Greek yogurt (plain)'],t:['protein','calc'],d:['濾除乳清，蛋白濃度倍增','滤除乳清，蛋白浓度倍增','Strained whey; doubled protein'],k:60,p:10,f:1,c:4,x:[['鈣','110 mg']]},
+{n:['花生（生）','花生（生）','Peanuts (raw)'],t:['protein','fat'],d:['蛋白油脂兼備，GI 極低','蛋白油脂兼备，GI 极低','Protein + fats; very low GI'],k:560,p:26,f:49,c:16},
+{n:['蘋果','苹果','Apple'],t:['gi'],d:['果膠延緩糖分吸收','果胶延缓糖分吸收','Pectin slows sugar absorption'],k:50,p:0.3,f:0.2,c:13,x:[['膳食纖維','2.4 g'],['GI','約 38']]},
+{n:['櫻桃','樱桃','Cherries'],t:['gi'],d:['花青素豐富，GI 極低','花青素丰富，GI 极低','Anthocyanins; very low GI'],k:60,p:1.1,f:0.2,c:14,x:[['GI','約 22']]},
+{n:['藍莓','蓝莓','Blueberries'],t:['gi'],d:['花青素抗氧化','花青素抗氧化','Anthocyanin antioxidants'],k:57,p:0.7,f:0.3,c:13,x:[['膳食纖維','2.4 g'],['GI','約 53']]},
+{n:['葡萄','葡萄','Grapes'],t:['gi'],d:['適量為宜（一次約 10~13 顆）','适量为宜（一次约 10~13 颗）','Portion: ~10–13 grapes'],k:65,p:0.6,f:0.2,c:16,x:[['GI','約 43']]},
+{n:['香蕉','香蕉','Banana'],t:['gi'],d:['越熟 GI 越高','越熟 GI 越高','Riper = higher GI'],k:90,p:1.1,f:0.2,c:22,x:[['鉀','290 mg'],['GI','50~62']]},
+{n:['柳橙','柳橙','Orange'],t:['vc','gi'],d:['果肉纖維＋類黃酮','果肉纤维＋类黄酮','Flesh fiber + flavonoids'],k:45,p:0.9,f:0.2,c:11,x:[['維C','53 mg'],['GI','約 43']]},
+{n:['葡萄柚','葡萄柚','Grapefruit'],t:['vc','gi'],d:['服藥者注意柚苷交互作用','服药者注意柚苷交互作用','Caution: interacts with some medications'],k:35,p:0.8,f:0.1,c:8,x:[['維C','35 mg'],['GI','約 25']]},
+{n:['草莓','草莓','Strawberries'],t:['vc','gi'],d:['維C 密度高的漿果','维C 密度高的浆果','Vitamin-C dense berry'],k:35,p:0.8,f:0.3,c:7,x:[['維C','60 mg'],['GI','約 40']]},
+{n:['無糖優格','无糖酸奶','Plain yogurt'],t:['calc','gi'],d:['發酵特性升糖和緩，含益生菌','发酵特性升糖和缓，含益生菌','Fermented; gentle GI; probiotics'],k:60,p:3.5,f:3,c:5,x:[['鈣','110 mg'],['GI','≤ 35']]},
+{n:['燕麥奶（原味）','燕麦奶（原味）','Oat milk (plain)'],t:['gi'],d:['保留β-葡聚醣；留意加糖款','保留β-葡聚糖；留意加糖款','Keeps beta-glucan; watch added sugar'],k:45,p:1,f:1.5,c:7,u:'ml'},
+{n:['牛奶','牛奶','Milk'],t:['calc'],d:['鈣磷比佳、吸收率好','钙磷比佳、吸收率好','Good Ca:P ratio; well absorbed'],k:65,p:3.2,f:3.7,c:4.8,x:[['鈣','100 mg']],u:'ml'},
+{n:['切達起司','切达奶酪','Cheddar cheese'],t:['calc'],d:['濃縮乳品；鈉與脂肪高宜適量','浓缩乳品；钠与脂肪高宜适量','Concentrated dairy; mind sodium & fat'],k:400,p:25,f:33,c:1.3,x:[['鈣','700 mg']]},
+{n:['小魚乾','小鱼干','Dried small fish'],t:['calc'],d:['連骨吃，鈣密度極高','连骨吃，钙密度极高','Eaten with bones; very calcium-dense'],k:300,p:65,f:5,c:5,x:[['鈣','2000 mg']]},
+{n:['黑芝麻（磨粉）','黑芝麻（磨粉）','Black sesame (ground)'],t:['calc','iron'],d:['鈣鐵雙補，磨碎吸收佳','钙铁双补，磨碎吸收佳','Calcium + iron; better absorbed ground'],k:550,p:18,f:47,c:20,x:[['鈣','1200 mg'],['鐵','10 mg']]},
+{n:['芥藍菜','芥蓝菜','Gai lan (Chinese kale)'],t:['calc'],d:['深綠菜中鈣突出、草酸低','深绿菜中钙突出、草酸低','High calcium among greens; low oxalate'],k:25,p:2.5,f:0.4,c:4,x:[['鈣','180 mg']]},
+{n:['紅莧菜','红苋菜','Red amaranth'],t:['iron','calc'],d:['鐵與鈣都亮眼','铁与钙都亮眼','Standout iron & calcium'],k:20,p:2.2,f:0.3,c:3,x:[['鐵','11 mg'],['鈣','190 mg']]},
+{n:['青江菜','青江菜','Bok choy'],t:['calc','light'],d:['鈣良好來源且熱量低','钙良好来源且热量低','Good calcium, low calorie'],k:20,p:1.5,f:0.3,c:3,x:[['鈣','100 mg']]},
+{n:['豬肝','猪肝','Pork liver'],t:['iron'],d:['血基質鐵吸收佳；每週 1~2 次為宜','血基质铁吸收佳；每周 1~2 次为宜','Well-absorbed heme iron; limit to 1–2×/week'],k:120,p:20,f:4,c:3,x:[['鐵','10 mg']]},
+{n:['豬血／鴨血','猪血／鸭血','Pork/duck blood curd'],t:['iron'],d:['低脂低熱量的補鐵王','低脂低热量的补铁王','Low-fat, low-calorie iron champion'],k:30,p:10,f:0.3,c:1,x:[['鐵','15~28 mg']]},
+{n:['牡蠣','牡蛎','Oysters'],t:['iron'],d:['鐵、鋅與蛋白兼具','铁、锌与蛋白兼具','Iron, zinc & protein'],k:70,p:9,f:2,c:4,x:[['鐵','7 mg'],['鋅','10 mg']]},
+{n:['紫菜（乾）','紫菜（干）','Laver (dried)'],t:['iron'],d:['湯品撒一撮就有感；每次約 3~5g','汤品撒一撮就有感；每次约 3~5g','A pinch in soup helps; ~3–5g per serving'],k:250,p:25,f:1,c:45,x:[['鐵','35 mg'],['碘','豐富']]},
+{n:['菠菜','菠菜','Spinach'],t:['iron','light'],d:['植物性鐵＋葉酸、葉黃素','植物性铁＋叶酸、叶黄素','Plant iron + folate, lutein'],k:20,p:2.2,f:0.4,c:3,x:[['鐵','2.9 mg']]},
+{n:['南瓜籽','南瓜籽','Pumpkin seeds'],t:['fat','iron'],d:['鎂與鐵都高','镁与铁都高','High magnesium & iron'],k:560,p:25,f:45,c:15,x:[['鐵','8 mg'],['鎂','260 mg']]},
+{n:['芭樂','芭乐','Guava'],t:['vc','fiber','gi'],d:['國民維C 王，CP 值最高','国民维C 王，CP 值最高','Best vitamin-C value for money'],k:40,p:1.1,f:0.4,c:10,x:[['維C','100 mg'],['膳食纖維','4 g'],['GI','約 30']]},
+{n:['紅甜椒','红甜椒','Red bell pepper'],t:['vc'],d:['維C 前段班（生食保留完整）；青椒約 88mg','维C 前段班（生食保留完整）；青椒约 88mg','Elite vitamin C raw; green pepper ~88mg'],k:30,p:1,f:0.3,c:6,x:[['維C','120 mg']]},
+{n:['木瓜','木瓜','Papaya'],t:['vc'],d:['木瓜酵素助蛋白消化','木瓜酵素助蛋白消化','Papain aids protein digestion'],k:45,p:0.6,f:0.3,c:11,x:[['維C','60 mg']]},
+{n:['鳳梨','凤梨','Pineapple'],t:['vc'],d:['鳳梨酵素助消化；GI 中等','凤梨酵素助消化；GI 中等','Bromelain aids digestion; moderate GI'],k:50,p:0.5,f:0.2,c:13,x:[['維C','45 mg'],['GI','約 60']]},
+{n:['聖女番茄','圣女番茄','Cherry tomatoes'],t:['vc','light'],d:['小顆維C密度高於大番茄','小颗维C密度高于大番茄','Higher vitamin C density than large tomatoes'],k:25,p:1,f:0.2,c:5,x:[['維C','40 mg']]},
+{n:['苦瓜','苦瓜','Bitter melon'],t:['vc','light'],d:['熱量極低、維C 高','热量极低、维C 高','Ultra low calorie; high vitamin C'],k:17,p:1,f:0.1,c:3,x:[['維C','60 mg']]},
+{n:['檸檬','柠檬','Lemon'],t:['vc'],d:['汁入菜泡水；皮含檸檬烯','汁入菜泡水；皮含柠檬烯','Juice for dishes & drinks; peel has limonene'],k:30,p:1.1,f:0.3,c:9,x:[['維C','50 mg']]},
+{n:['特級初榨橄欖油','特级初榨橄榄油','Extra virgin olive oil'],t:['fat'],d:['多酚抗氧化，涼拌為主','多酚抗氧化，凉拌为主','Polyphenol-rich; best for cold dishes'],k:884,p:0,f:100,c:0,x:[['單元不飽和','73 g']]},
+{n:['苦茶油','苦茶油','Camellia oil'],t:['fat'],d:['單元不飽和高、發煙點高','单元不饱和高、发烟点高','High MUFA; high smoke point'],k:884,p:0,f:100,c:0,x:[['單元不飽和','80 g']]},
+{n:['酪梨','酪梨','Avocado'],t:['fat','fiber'],d:['好油的唯一直接水果來源','好油的唯一直接水果来源','The only fruit delivering healthy fats directly'],k:120,p:2,f:10,c:6,x:[['膳食纖維','6 g']]},
+{n:['核桃','核桃','Walnuts'],t:['fat'],d:['植物性 Omega-3（ALA）之冠','植物性 Omega-3（ALA）之冠','Highest plant omega-3 (ALA)'],k:650,p:15,f:60,c:15,x:[['Omega-3','9 g']]},
+{n:['杏仁','杏仁','Almonds'],t:['fat','fiber'],d:['維E 豐富','维E 丰富','Rich in vitamin E'],k:580,p:21,f:50,c:18,x:[['維E','26 mg'],['膳食纖維','12 g']]},
+{n:['腰果','腰果','Cashews'],t:['fat'],d:['質地滑順，鐵鋅也不少','质地滑顺，铁锌也不少','Creamy; decent iron & zinc'],k:560,p:18,f:46,c:27,x:[['鐵','6 mg'],['鋅','5 mg']]},
+{n:['開心果','开心果','Pistachios'],t:['fat'],d:['蛋白相對高，帶殼好控制份量','蛋白相对高，带壳好控制分量','Higher protein; shells help portion control'],k:560,p:20,f:45,c:20,x:[['膳食纖維','10 g']]},
+{n:['冬瓜','冬瓜','Winter melon'],t:['light'],d:['熱量超低，湯品好基底','热量超低，汤品好基底','Ultra-low calorie soup base'],k:15,p:0.4,f:0.2,c:3,x:[['水分','96 %']]},
+{n:['小黃瓜','小黄瓜','Cucumber'],t:['light'],d:['水分約 95%','水分约 95%','~95% water'],k:15,p:0.7,f:0.1,c:3,x:[['水分','95 %']]},
+{n:['芹菜','芹菜','Celery'],t:['light'],d:['鉀與纖維，脆口零嘴','钾与纤维，脆口零嘴','Potassium & fiber; crunchy snack'],k:15,p:0.7,f:0.2,c:3,x:[['膳食纖維','1.6 g']]},
+{n:['絲瓜','丝瓜','Loofah gourd'],t:['light'],d:['水分足、清甜','水分足、清甜','Watery, mild & sweet'],k:20,p:1,f:0.2,c:4},
+{n:['白蘿蔔','白萝卜','Daikon radish'],t:['light'],d:['澱粉酶助消化（生食）','淀粉酶助消化（生食）','Amylase aids digestion (raw)'],k:20,p:0.9,f:0.1,c:4,x:[['維C','15 mg']]},
+{n:['高麗菜','高丽菜','Cabbage'],t:['light'],d:['平價十字花科，維C 也不少','平价十字花科，维C 也不少','Affordable cruciferous; decent vitamin C'],k:23,p:1.4,f:0.2,c:5,x:[['維C','36 mg']]},
+{n:['空心菜','空心菜','Water spinach'],t:['light'],d:['夏季常見葉菜','夏季常见叶菜','Common summer leafy green'],k:20,p:2.2,f:0.3,c:3,x:[['膳食纖維','2 g']]},
+{n:['綠蘆筍','绿芦笋','Green asparagus'],t:['light'],d:['葉酸良好來源','叶酸良好来源','Good folate source'],k:20,p:2.2,f:0.1,c:3,x:[['葉酸','52 μg']]},
+{n:['洋蔥','洋葱','Onion'],t:['light'],d:['槲皮素＋果寡糖（益生元）','槲皮素＋果寡糖（益生元）','Quercetin + FOS (prebiotic)'],k:40,p:1,f:0.1,c:9,x:[['GI','約 10']]},
+{n:['大番茄','大番茄','Tomato'],t:['light'],d:['茄紅素煮過更易吸收','茄红素煮过更易吸收','Lycopene better absorbed when cooked'],k:18,p:0.9,f:0.2,c:4,x:[['維C','21 mg']]},
+{n:['海帶（生）','海带（生）','Kelp (fresh)'],t:['light'],d:['碘豐富；甲狀腺疾病者注意','碘丰富；甲状腺疾病者注意','Iodine-rich; thyroid conditions beware'],k:30,p:1,f:0.1,c:5,x:[['碘','豐富']]},
+{n:['西瓜','西瓜','Watermelon'],t:['light'],d:['GI 高（約 75）但一次含醣量低','GI 高（约 75）但一次含糖量低','High GI (~75) but low carbs per serving'],k:30,p:0.6,f:0.2,c:7,x:[['GI','約 75'],['水分','92 %']]},
+{n:['愛玉／仙草（無糖）','爱玉／仙草（无糖）','Aiyu / grass jelly (no sugar)'],t:['light'],d:['近乎零卡的前提是別加糖','近乎零卡的前提是别加糖','Near zero-calorie only if unsweetened'],k:2,p:0,f:0,c:0.5},
+{n:['黑咖啡','黑咖啡','Black coffee'],t:['light'],d:['綠原酸抗氧化；咖啡因適量','绿原酸抗氧化；咖啡因适量','Chlorogenic acid; moderate caffeine'],k:2,p:0.1,f:0,c:0},
+{n:['無糖綠茶','无糖绿茶','Unsweetened green tea'],t:['light'],d:['兒茶素；咖啡因低於咖啡','儿茶素；咖啡因低于咖啡','Catechins; less caffeine than coffee'],k:1,p:0,f:0,c:0}
 ];
 
 /* ════ 工具 ════ */
@@ -388,89 +467,62 @@ function esc(s){
   });
 }
 function ftext(f){
-  var tagText = f.t.map(function(t){return CAT[t]?(CAT[t].n+' '+CAT[t].sh):'';}).join(' ');
-  var ex=(f.x||[]).map(function(e){return e[0]+' '+e[1];}).join(' ');
-  return f.n+' '+tagText+' '+f.d+' '+ex;
+  var tagText=f.t.map(function(t2){return CAT[t2]?(CAT[t2].n[L]+' '+CAT[t2].sh[L]):'';}).join(' ');
+  var ex=(f.x||[]).map(function(e){return e[0]+' '+e[1]+' '+xl(e[0])+' '+xv(e[1]);}).join(' ');
+  return f.n.join(' ')+' '+tagText+' '+f.d[L]+' '+ex;
 }
 function chipsBrowse(tags,current){
-  return tags.map(function(t){
-    if(!CAT[t])return '';
-    return '<span class="chip'+(t===current?'':' sub')+' c-'+t+'">'+(t===current?'':'＋')+CAT[t].sh+'</span>';
+  var pre=(L===2?'+':'＋');
+  return tags.map(function(t2){
+    return '<span class="chip'+(t2===current?'':' sub')+' c-'+t2+'">'+(t2===current?'':pre)+CAT[t2].sh[L]+'</span>';
   }).join('');
 }
 function chipsSolid(tags){
-  return tags.map(function(t){
-    if(!CAT[t])return '';
-    return '<span class="chip c-'+t+'">'+CAT[t].sh+'</span>';
-  }).join('');
+  return tags.map(function(t2){return '<span class="chip c-'+t2+'">'+CAT[t2].sh[L]+'</span>';}).join('');
 }
 
 /* ════ 營養小方塊 ════ */
 function gu(n,u){return (n==null)?'<b>—</b>':'<b>'+n+'<u>'+u+'</u></b>';}
 function tiles(f){
   var h='';
-  if(f.u==='ml')h+='<span class="perml">每 100ml</span>';
-  h+='<span class="nb kcal"><i>熱量</i><b>'+f.k+'<u>kcal</u></b></span>'
-   +'<span class="nb"><i>蛋白質</i>'+gu(f.p,'g')+'</span>'
-   +'<span class="nb"><i>脂肪</i>'+gu(f.f,'g')+'</span>'
-   +'<span class="nb"><i>碳水</i>'+gu(f.c,'g')+'</span>';
+  if(f.u==='ml')h+='<span class="perml">'+t('perMl')+'</span>';
+  h+='<span class="nb kcal"><i>'+t('tKcal')+'</i><b>'+f.k+'<u>kcal</u></b></span>'
+   +'<span class="nb"><i>'+t('tProt')+'</i>'+gu(f.p,'g')+'</span>'
+   +'<span class="nb"><i>'+t('tFat')+'</i>'+gu(f.f,'g')+'</span>'
+   +'<span class="nb"><i>'+t('tCarb')+'</i>'+gu(f.c,'g')+'</span>';
   (f.x||[]).forEach(function(e){
-    h+='<span class="nb ex"><i>'+esc(e[0])+'</i><b>'+esc(e[1])+'</b></span>';
+    h+='<span class="nb ex"><i>'+esc(xl(e[0]))+'</i><b>'+esc(xv(e[1]))+'</b></span>';
   });
   return '<div class="nutri">'+h+'</div>';
 }
 
-/* ════ 生成主欄類別表格 ════ */
-var secs=document.getElementById('secs'), html='';
-CAT_ORDER.forEach(function(k){
-  var foods=F.filter(function(f){return f.t.indexOf(k)>-1;});
-  html+='<section class="card" id="sec-'+k+'">'
-   +'<h2>'+CAT[k].i+' '+CAT[k].n+'類<span class="num">'+foods.length+' 項</span></h2>'
-   +'<p class="sec-note">'+CAT[k].s+'</p>'
-   +'<div class="twrap"><table><thead><tr>'
-   +'<th>食物名稱</th><th>營養屬性</th><th>主要營養成分說明</th><th>每 100g 粗估營養數值</th>'
-   +'</tr></thead><tbody>';
-  foods.forEach(function(f){
-    html+='<tr><td class="food-name">'+esc(f.n)+'</td><td>'+chipsBrowse(f.t,k)
-      +'</td><td>'+esc(f.d)+'</td><td>'+tiles(f)+'</td></tr>';
-  });
-  html+='</tbody></table></div></section>';
-});
-secs.innerHTML=html;
-
-/* 跨類速查 */
-var multi=F.filter(function(f){return f.t.length>=2;})
-  .sort(function(a,b){return (b.t.length-a.t.length)||a.n.localeCompare(b.n,'zh-Hant');});
-document.getElementById('crossBody').innerHTML=multi.map(function(f){
-  return '<tr><td class="food-name">'+esc(f.n)+'</td><td>'+chipsSolid(f.t)+'</td></tr>';
-}).join('');
-
-/* 面板導覽連結 */
-var pillHtml='<a href="#std">標準</a>';
-CAT_ORDER.forEach(function(k){pillHtml+='<a href="#sec-'+k+'">'+CAT[k].sh+'</a>';});
-pillHtml+='<a href="#cross">跨類</a><a href="#tips">提醒</a>';
-document.getElementById('pills').innerHTML=pillHtml;
-
-/* ════ 篩選系統 ════ */
+/* ════ DOM 引用 ════ */
 var q=document.getElementById('q'), countEl=document.getElementById('count'), body=document.body;
 var state={sel:{},mode:'and',sort:'default'};
 function selKeys(){return CAT_ORDER.filter(function(k){return state.sel[k];});}
 
+/* ════ 類別多選按鈕（一次建立，換語言只更新文字） ════ */
 var fbar=document.getElementById('fbar');
 CAT_ORDER.forEach(function(k){
-  var cnt=F.filter(function(f){return f.t.indexOf(k)>-1;}).length;
   var b=document.createElement('button');
   b.type='button'; b.className='fbtn c-'+k; b.setAttribute('data-k',k);
   b.style.setProperty('--c','var('+CAT[k].v+')');
-  b.innerHTML='<span>'+CAT[k].i+' '+CAT[k].sh+'</span><span class="cnt">'+cnt+'</span>';
   b.addEventListener('click',function(){ state.sel[k]=!state.sel[k]; syncBtns(); apply(); });
   fbar.appendChild(b);
 });
+function updateFbar(){
+  [].forEach.call(fbar.querySelectorAll('.fbtn'),function(b){
+    var k=b.getAttribute('data-k');
+    var cnt=F.filter(function(f){return f.t.indexOf(k)>-1;}).length;
+    b.innerHTML='<span>'+CAT[k].i+' '+CAT[k].sh[L]+'</span><span class="cnt">'+cnt+'</span>';
+  });
+}
 function syncBtns(){
   [].forEach.call(fbar.querySelectorAll('.fbtn'),function(b){
     b.classList.toggle('on',!!state.sel[b.getAttribute('data-k')]);
   });
 }
+
 var modeAnd=document.getElementById('modeAnd'), modeOr=document.getElementById('modeOr');
 function syncMode(){
   modeAnd.classList.toggle('on',state.mode==='and');
@@ -480,7 +532,81 @@ modeAnd.addEventListener('click',function(){state.mode='and';syncMode();apply();
 modeOr.addEventListener('click',function(){state.mode='or';syncMode();apply();});
 var sortSel=document.getElementById('sort');
 sortSel.addEventListener('change',function(){state.sort=sortSel.value;apply();});
+function updateSort(){
+  sortSel.innerHTML=SORTS.map(function(s){return '<option value="'+s[0]+'">'+s[1+L]+'</option>';}).join('');
+  sortSel.value=state.sort;
+}
 
+/* ════ 全站渲染（換語言時重繪） ════ */
+function buildSecs(){
+  var html='';
+  CAT_ORDER.forEach(function(k){
+    var foods=F.filter(function(f){return f.t.indexOf(k)>-1;});
+    html+='<section class="card" id="sec-'+k+'">'
+     +'<h2>'+CAT[k].i+' '+CAT[k].n[L]+SFX[L]+'<span class="num">'+foods.length+t('items')+'</span></h2>'
+     +'<p class="sec-note">'+CAT[k].s[L]+'</p>'
+     +'<div class="twrap"><table><thead><tr>'
+     +'<th>'+t('thFood')+'</th><th>'+t('thAttr')+'</th><th>'+t('thDesc')+'</th><th>'+t('thVal')+'</th>'
+     +'</tr></thead><tbody>';
+    foods.forEach(function(f){
+      html+='<tr><td class="food-name">'+esc(f.n[L])+'</td><td>'+chipsBrowse(f.t,k)
+        +'</td><td>'+esc(f.d[L])+'</td><td>'+tiles(f)+'</td></tr>';
+    });
+    html+='</tbody></table></div></section>';
+  });
+  document.getElementById('secs').innerHTML=html;
+}
+
+function renderAll(){
+  document.documentElement.lang=LOC[L];
+  document.title=t('title');
+  document.getElementById('ptTitle').textContent=t('title');
+  document.getElementById('ptSub').textContent=t('subtitle');
+  document.getElementById('panelTitle').textContent=t('panelTitle');
+  q.placeholder=t('searchPh');
+  document.getElementById('reset').textContent=t('clear');
+  document.getElementById('lblCat').textContent=t('lblCat');
+  document.getElementById('lblMode').textContent=t('lblMode');
+  document.getElementById('lblSort').textContent=t('lblSort');
+  document.getElementById('lblNav').textContent=t('lblNav');
+  document.getElementById('hintTxt').innerHTML=t('hint');
+  modeAnd.textContent=t('modeAnd');
+  modeOr.textContent=t('modeOr');
+  document.getElementById('resTitle').textContent=t('resTitle');
+  document.getElementById('resTh1').textContent=t('thFood');
+  document.getElementById('resTh2').textContent=t('thAttrRes');
+  document.getElementById('resTh3').textContent=t('thDesc');
+  document.getElementById('resTh4').textContent=t('thVal');
+  document.getElementById('stdTitle').textContent=t('stdTitle');
+  document.getElementById('stdNote').textContent=t('stdNote');
+  document.getElementById('stdTh1').textContent=t('stdThCat');
+  document.getElementById('stdTh2').textContent=t('stdThRef');
+  document.getElementById('stdBody').innerHTML=CAT_ORDER.map(function(k){
+    return '<tr><td><span class="chip c-'+k+'">'+CAT[k].sh[L]+'</span></td><td>'+STD[k][L]+'</td></tr>';
+  }).join('');
+  document.getElementById('crossTitle').textContent=t('crossTitle');
+  document.getElementById('crossNum').textContent=t('crossNum');
+  document.getElementById('crossNote').textContent=t('crossNote');
+  document.getElementById('crossTh1').textContent=t('crossThFood');
+  document.getElementById('crossTh2').textContent=t('crossThCat');
+  var multi=F.filter(function(f){return f.t.length>=2;})
+    .sort(function(a,b){return (b.t.length-a.t.length)||a.n[L].localeCompare(b.n[L],LOC[L]);});
+  document.getElementById('crossBody').innerHTML=multi.map(function(f){
+    return '<tr><td class="food-name">'+esc(f.n[L])+'</td><td>'+chipsSolid(f.t)+'</td></tr>';
+  }).join('');
+  document.getElementById('tipsTitle').textContent=t('tipsTitle');
+  document.getElementById('tipsNote').textContent=t('tipsNote');
+  document.getElementById('tipsList').innerHTML=TIPS.map(function(tp){
+    return '<li><strong>'+tp.h[L]+'</strong>'+(L===2?': ':'：')+tp.b[L]+'</li>';
+  }).join('');
+  document.getElementById('footH').textContent=t('footH');
+  document.getElementById('footB').textContent=(L===2?': ':'：')+FOOTB[L];
+  document.getElementById('theme').title=t('themeTitle');
+  document.getElementById('totop').title=t('totopTitle');
+  updateFbar(); updateSort(); buildSecs();
+}
+
+/* ════ 篩選系統 ════ */
 function match(f){
   var rawKws=q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   var text=ftext(f).toLowerCase();
@@ -499,17 +625,18 @@ function hl(name){
   kws.forEach(function(kw){
     var clean=esc(kw).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     if(!clean)return;
-    try{
-      en=en.replace(new RegExp('('+clean+')','gi'),'<mark>$1</mark>');
-    }catch(e){}
+    try{ en=en.replace(new RegExp('('+clean+')','gi'),'<mark>$1</mark>'); }catch(e){}
   });
   return en;
 }
 function resChips(f){
-  return f.t.map(function(t){
-    if(!CAT[t])return '';
-    return '<span class="chip'+(state.sel[t]?'':' sub')+' c-'+t+'">'+CAT[t].sh+'</span>';
+  return f.t.map(function(t2){
+    return '<span class="chip'+(state.sel[t2]?'':' sub')+' c-'+t2+'">'+CAT[t2].sh[L]+'</span>';
   }).join('');
+}
+function sortLabel(v){
+  for(var i=0;i<SORTS.length;i++){ if(SORTS[i][0]===v)return SORTS[i][1+L]; }
+  return '';
 }
 
 function apply(){
@@ -517,6 +644,7 @@ function apply(){
   var on=selKeys().length>0 || rawKw!=='' || state.sort!=='default';
   document.getElementById('std').style.display=on?'none':'';
   document.getElementById('cross').style.display=on?'none':'';
+  document.getElementById('tips').style.display=on?'none':'';
   [].forEach.call(document.querySelectorAll('section.card[id^="sec-"]'),function(s){
     s.style.display=on?'none':'';
   });
@@ -526,41 +654,39 @@ function apply(){
       tryOr=document.getElementById('tryOr'),
       resTwrap=document.getElementById('resTwrap'),
       tbody=document.getElementById('resBody');
-      
+
   if(!on){
     res.style.display='none';
-    countEl.textContent='共收錄 '+F.length+' 項';
+    countEl.textContent=t('total')+F.length+t('items');
     return;
   }
 
   var list=F.filter(match);
   if(state.sort==='name'){
-    list.sort(function(a,b){return a.n.localeCompare(b.n,'zh-Hant');});
+    list.sort(function(a,b){return a.n[L].localeCompare(b.n[L],LOC[L]);});
   }else if(state.sort==='tags'){
-    list.sort(function(a,b){return (b.t.length-a.t.length)||a.n.localeCompare(b.n,'zh-Hant');});
+    list.sort(function(a,b){return (b.t.length-a.t.length)||a.n[L].localeCompare(b.n[L],LOC[L]);});
   }else if(state.sort==='kcalA'){
-    list.sort(function(a,b){return (a.k-b.k)||a.n.localeCompare(b.n,'zh-Hant');});
+    list.sort(function(a,b){return (a.k-b.k)||a.n[L].localeCompare(b.n[L],LOC[L]);});
   }else if(state.sort==='kcalD'){
-    list.sort(function(a,b){return (b.k-a.k)||a.n.localeCompare(b.n,'zh-Hant');});
+    list.sort(function(a,b){return (b.k-a.k)||a.n[L].localeCompare(b.n[L],LOC[L]);});
   }else if(state.sort==='prot'){
-    list.sort(function(a,b){return ((b.p||0)-(a.p||0))||a.n.localeCompare(b.n,'zh-Hant');});
+    list.sort(function(a,b){return ((b.p||0)-(a.p||0))||a.n[L].localeCompare(b.n[L],LOC[L]);});
   }
 
   var keys=selKeys();
-  var cond=keys.length?keys.map(function(k){return CAT[k].i+' '+CAT[k].n;})
-    .join(state.mode==='and'?' ＋ ':' 或 ')
-    +(keys.length>1?(state.mode==='and'?'（需全部符合）':'（符合任一即可）'):''):'';
-  var kwTxt=rawKw?('關鍵字「'+esc(rawKw)+'」'):'';
-  var sortTxtMap={name:'名稱排序',tags:'屬性數排序',kcalA:'熱量 低→高',kcalD:'熱量 高→低',prot:'蛋白質 高→低'};
-  var sortTxt=state.sort!=='default'?(sortTxtMap[state.sort]||''):'';
-
-  document.getElementById('resDesc').innerHTML=[cond,kwTxt,sortTxt].filter(Boolean).join(' ・ ')||'全部食物';
-  document.getElementById('resNum').textContent=list.length+' 項';
+  var cond=keys.length?keys.map(function(k){return CAT[k].i+' '+CAT[k].n[L];})
+    .join(t(state.mode==='and'?'andJoin':'orJoin'))
+    +(keys.length>1?t(state.mode==='and'?'needAll':'anyOk'):''):'';
+  var kwTxt=rawKw?(t('kw')+esc(rawKw)+t('kwEnd')):'';
+  var sortTxt=state.sort!=='default'?sortLabel(state.sort):'';
+  document.getElementById('resDesc').innerHTML=[cond,kwTxt,sortTxt].filter(Boolean).join(' ・ ')||t('resAll');
+  document.getElementById('resNum').textContent=list.length+t('items');
 
   if(list.length){
     tbody.innerHTML=list.map(function(f){
-      return '<tr><td class="food-name">'+hl(f.n)+'</td><td>'+resChips(f)
-        +'</td><td>'+esc(f.d)+'</td><td>'+tiles(f)+'</td></tr>';
+      return '<tr><td class="food-name">'+hl(f.n[L])+'</td><td>'+resChips(f)
+        +'</td><td>'+esc(f.d[L])+'</td><td>'+tiles(f)+'</td></tr>';
     }).join('');
     resTwrap.style.display='';
     empty.style.display='none';
@@ -569,15 +695,15 @@ function apply(){
     resTwrap.style.display='none';
     empty.style.display='';
     if(state.mode==='and' && keys.length>1){
-      emptyTxt.textContent='😕 找不到同時符合這些條件的食物';
+      emptyTxt.textContent=t('emptyAnd');
       tryOr.style.display='';
     }else{
-      emptyTxt.textContent='😕 找不到符合條件的食物';
+      emptyTxt.textContent=t('emptyNone');
       tryOr.style.display='none';
     }
   }
   res.style.display='';
-  countEl.textContent='找到 '+list.length+' 項';
+  countEl.textContent=t('found')+list.length+t('items');
 }
 
 q.addEventListener('input',apply);
@@ -591,15 +717,9 @@ function resetAll(){
   syncBtns();
   apply();
 }
-
-document.getElementById('reset').addEventListener('click',function(){
-  resetAll();
-  q.focus();
-});
+document.getElementById('reset').addEventListener('click',function(){ resetAll(); q.focus(); });
 document.getElementById('tryOr').addEventListener('click',function(){
-  state.mode='or';
-  syncMode();
-  apply();
+  state.mode='or'; syncMode(); apply();
 });
 document.getElementById('pills').addEventListener('click',function(e){
   var a=e.target.closest('a');
@@ -617,15 +737,45 @@ document.getElementById('pills').addEventListener('click',function(e){
   }
 });
 document.addEventListener('keydown',function(e){
-  if(e.key==='/' && document.activeElement!==q){
-    e.preventDefault();
-    q.focus();
-  }
-  if(e.key==='Escape'){
-    resetAll();
-    q.blur();
-  }
+  if(e.key==='/' && document.activeElement!==q){ e.preventDefault(); q.focus(); }
+  if(e.key==='Escape'){ resetAll(); q.blur(); }
 });
+
+/* ════ 語言切換 ════ */
+function syncLangBtns(){
+  [].forEach.call(document.querySelectorAll('#langSeg button'),function(b){
+    b.classList.toggle('on',parseInt(b.getAttribute('data-l'),10)===L);
+  });
+}
+document.getElementById('langSeg').addEventListener('click',function(e){
+  var b=e.target.closest('button');
+  if(!b)return;
+  var nl=parseInt(b.getAttribute('data-l'),10);
+  if(nl===L)return;
+  L=nl;
+  try{localStorage.setItem('foodlang',String(L));}catch(e2){}
+  syncLangBtns();
+  renderAll();
+  apply();
+});
+
+/* 導覽列（renderAll 後需重給文字） */
+function updatePills(){
+  var pillHtml='<a href="#std">'+SORTS[0][0]+'</a>';
+  pillHtml='<a href="#std">'+(L===2?'Criteria':(L===1?'标准':'標準'))+'</a>';
+  CAT_ORDER.forEach(function(k){pillHtml+='<a href="#sec-'+k+'">'+CAT[k].sh[L]+'</a>';});
+  pillHtml+='<a href="#cross">'+t('crossTitle').replace('🔄 ','')+'</a><a href="#tips">'+(L===2?'Tips':(L===1?'提醒':'提醒'))+'</a>';
+  document.getElementById('pills').innerHTML=pillHtml;
+}
+var _buildSecs=buildSecs;
+buildSecs=function(){ _buildSecs(); updatePills(); };
+
+/* ════ 初始化 ════ */
+var savedLang=null;
+try{savedLang=localStorage.getItem('foodlang');}catch(e){}
+if(savedLang==='1'||savedLang==='2'||savedLang==='0')L=parseInt(savedLang,10);
+syncLangBtns();
+renderAll();
 syncMode();
 apply();
 
@@ -634,13 +784,9 @@ var themeBtn=document.getElementById('theme');
 function setTheme(d,save){
   body.classList.toggle('dark',d);
   themeBtn.textContent=d?'☀️':'🌙';
-  if(save){
-    try{localStorage.setItem('foodtheme',d?'dark':'light');}catch(e){}
-  }
+  if(save){ try{localStorage.setItem('foodtheme',d?'dark':'light');}catch(e){} }
 }
-themeBtn.addEventListener('click',function(){
-  setTheme(!body.classList.contains('dark'),true);
-});
+themeBtn.addEventListener('click',function(){ setTheme(!body.classList.contains('dark'),true); });
 var savedTheme=null;
 try{savedTheme=localStorage.getItem('foodtheme');}catch(e){}
 if(savedTheme==='dark'||(!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)){
@@ -651,9 +797,7 @@ var totopBtn=document.getElementById('totop');
 window.addEventListener('scroll',function(){
   totopBtn.style.display=(window.scrollY||document.documentElement.scrollTop)>400?'block':'none';
 },{passive:true});
-totopBtn.addEventListener('click',function(){
-  window.scrollTo({top:0,behavior:'smooth'});
-});
+totopBtn.addEventListener('click',function(){ window.scrollTo({top:0,behavior:'smooth'}); });
 })();
 </script>
 </body>
