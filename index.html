@@ -81,7 +81,7 @@ animation:pop .6s cubic-bezier(.2,1.4,.4,1) both}
 body.dark .hero-ico{background:linear-gradient(135deg,#0d4f43,#0b4a63);
 box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),var(--shadow-sm)}
 .hero-txt{background:linear-gradient(100deg,var(--text) 35%,var(--accent) 78%,var(--accent2));
--webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;display:inline-block}
 .subtitle{color:var(--muted);font-size:12.5px;margin-top:6px;padding-left:58px;position:relative}
 .hero-stats{display:flex;gap:8px;margin-top:12px;padding-left:58px;flex-wrap:wrap;position:relative}
 .hstat{display:inline-flex;align-items:center;gap:6px;background:var(--thead);
@@ -103,7 +103,7 @@ border-radius:50%;width:34px;height:34px;display:grid;place-items:center;cursor:
 font-size:15px;transition:all .25s ease;box-shadow:var(--shadow-sm)}
 .theme-btn:hover{border-color:var(--accent);transform:rotate(14deg) scale(1.06)}
 
-/* ── 右側玻璃面板 ── */
+/* ── 右側面板 ── */
 #panel{--c:var(--accent);grid-area:panel;position:sticky;top:16px;align-self:start;
 max-height:calc(100vh - 32px);overflow-y:auto;background:var(--card);
 border:1px solid var(--border);border-radius:16px;padding:14px 14px 12px;
@@ -184,17 +184,6 @@ section.card:hover{box-shadow:var(--shadow-md)}
 @supports (color:color-mix(in srgb,red,blue)){
 section.card:hover{border-color:color-mix(in srgb,var(--c,#888) 30%,var(--border))}
 }
-#secs>section.card:nth-child(1){animation-delay:.02s}
-#secs>section.card:nth-child(2){animation-delay:.06s}
-#secs>section.card:nth-child(3){animation-delay:.10s}
-#secs>section.card:nth-child(4){animation-delay:.14s}
-#secs>section.card:nth-child(5){animation-delay:.18s}
-#secs>section.card:nth-child(6){animation-delay:.22s}
-#secs>section.card:nth-child(7){animation-delay:.26s}
-#secs>section.card:nth-child(8){animation-delay:.30s}
-#secs>section.card:nth-child(9){animation-delay:.34s}
-#secs>section.card:nth-child(10){animation-delay:.38s}
-#secs>section.card:nth-child(11){animation-delay:.42s}
 section h2{display:flex;align-items:center;gap:10px;font-size:16.5px;font-weight:800;
 line-height:1.3;letter-spacing:.01em}
 #resTitle,#crossTitle{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
@@ -227,7 +216,7 @@ mark{background:linear-gradient(transparent 40%,rgba(14,116,144,.25) 0);color:in
 border-radius:3px;padding:0 2px;font-weight:800}
 body.dark mark{background:linear-gradient(transparent 40%,rgba(56,189,248,.3) 0)}
 
-/* ── 營養小方塊＋視覺化長條 ── */
+/* ── 營養方塊 ── */
 .nutri{display:flex;flex-wrap:wrap;gap:5px;max-width:430px;align-items:stretch}
 .perml{display:inline-flex;align-items:center;font-size:9.5px;color:var(--muted);
 border:1px dashed var(--border);border-radius:6px;padding:1px 6px;white-space:nowrap;align-self:center}
@@ -275,7 +264,6 @@ border-color:color-mix(in srgb,var(--c,#888) 45%,transparent)}
 .c-gi{--c:var(--gi)}.c-calc{--c:var(--calc)}.c-iron{--c:var(--iron)}
 .c-vc{--c:var(--vc)}.c-fat{--c:var(--fat)}.c-light{--c:var(--light)}
 
-/* ── 食材類型標籤 ── */
 .ttag{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:7px;
 font-size:10px;line-height:1.7;font-weight:600;border:1px solid var(--c);color:var(--c);
 margin:1px 0 1px 6px;white-space:nowrap}
@@ -290,7 +278,6 @@ background:color-mix(in srgb,var(--c) 8%,transparent)}
 .t-soy{--c:var(--t-soy)}.t-dairy{--c:var(--t-dairy)}.t-nut{--c:var(--t-nut)}
 .t-oil{--c:var(--t-oil)}.t-drink{--c:var(--t-drink)}
 
-/* ── 空狀態／提醒／頁尾 ── */
 .empty{padding:26px 12px;text-align:center;color:var(--muted);font-size:13px}
 .empty button{margin-top:10px;border:1px solid var(--accent);color:var(--accent);
 border-radius:99px;padding:6px 16px;background:transparent;cursor:pointer;
@@ -358,15 +345,15 @@ section.card,footer.note,#panel{box-shadow:none}
       <button type="button" data-l="1" title="简体中文">简</button>
       <button type="button" data-l="2" title="English">EN</button>
     </div>
-    <button class="theme-btn" id="theme">🌙</button>
+    <button type="button" class="theme-btn" id="theme" aria-label="切換顏色模式">🌙</button>
   </div>
 </header>
 
 <!-- ── 右側常駐篩選面板 ── -->
 <aside id="panel">
   <div class="p-title" id="panelTitle">🎯 條件篩選</div>
-  <div class="searchbox"><input id="q" type="search"></div>
-  <div class="p-row"><span class="count" id="count"></span><button id="reset"></button></div>
+  <div class="searchbox"><input id="q" type="search" aria-label="搜尋食物"></div>
+  <div class="p-row"><span class="count" id="count"></span><button type="button" id="reset"></button></div>
   <div class="p-label" id="lblView"></div>
   <div class="seg">
     <button type="button" id="viewNut" class="on"></button>
@@ -382,7 +369,7 @@ section.card,footer.note,#panel{box-shadow:none}
     <button type="button" id="modeOr"></button>
   </div>
   <div class="p-label" id="lblSort"></div>
-  <select id="sort"></select>
+  <select id="sort" aria-label="排序方式"></select>
   <p class="hint" id="hintTxt"></p>
   <div class="p-label" id="lblNav"></div>
   <nav class="mini-nav" id="pills"></nav>
@@ -395,7 +382,7 @@ section.card,footer.note,#panel{box-shadow:none}
   <h2><span id="resTitle">🎯 篩選結果</span><span class="num" id="resNum"></span></h2>
   <p class="sec-note" id="resDesc"></p>
   <div class="twrap" id="resTwrap"><table>
-    <thead><tr><th id="resTh1"></th><th id="resTh2"></th><th id="resTh3"></th><th id="resTh4"></th></tr></thead>
+    <thead><tr><th scope="col" id="resTh1"></th><th scope="col" id="resTh2"></th><th scope="col" id="resTh3"></th><th scope="col" id="resTh4"></th></tr></thead>
     <tbody id="resBody"></tbody>
   </table></div>
   <div class="empty" id="empty" style="display:none">
@@ -408,7 +395,7 @@ section.card,footer.note,#panel{box-shadow:none}
   <h2 id="stdTitle"></h2>
   <p class="sec-note" id="stdNote"></p>
   <div class="twrap"><table>
-    <thead><tr><th id="stdTh1"></th><th id="stdTh2"></th></tr></thead>
+    <thead><tr><th scope="col" id="stdTh1"></th><th scope="col" id="stdTh2"></th></tr></thead>
     <tbody id="stdBody"></tbody>
   </table></div>
 </section>
@@ -419,7 +406,7 @@ section.card,footer.note,#panel{box-shadow:none}
   <h2><span id="crossTitle"></span><span class="num" id="crossNum"></span></h2>
   <p class="sec-note" id="crossNote"></p>
   <div class="twrap"><table>
-    <thead><tr><th id="crossTh1"></th><th id="crossTh2"></th></tr></thead>
+    <thead><tr><th scope="col" id="crossTh1"></th><th scope="col" id="crossTh2"></th></tr></thead>
     <tbody id="crossBody"></tbody>
   </table></div>
 </section>
@@ -437,7 +424,7 @@ section.card,footer.note,#panel{box-shadow:none}
 </footer>
 
 </div>
-<button id="totop">↑</button>
+<button type="button" id="totop" aria-label="回到頁面頂端">↑</button>
 
 <script>
 (function(){
@@ -445,11 +432,35 @@ section.card,footer.note,#panel{box-shadow:none}
 var L=0, LOC=['zh-Hant','zh-Hans','en'], SFX=['類','类',''];
 function t(k){return T[k][L];}
 
+/* ════ 智慧同義詞對照庫（繁 / 簡 / 英 / 縮寫） ════ */
+const SYNONYMS = {
+  protein: ['蛋白', '蛋白質', '蛋白质', 'protein', 'bcaa'],
+  fiber: ['纖維', '纤维', '膳食纖維', '膳食纤维', 'fiber', '菊糖', '葡聚醣', '葡聚糖'],
+  iron: ['鐵', '铁', 'iron', '補血', '补血', '血基質'],
+  calcium: ['鈣', '钙', 'calcium', '補鈣', '补钙'],
+  vitaminc: ['維c', '维c', '維生素c', '维生素c', '維他命c', '维他命c', 'vitamin c', 'vit c', 'vc'],
+  omega3: ['omega3', 'omega-3', 'ω-3', 'dha', 'epa', '亞麻酸', '亚麻酸'],
+  potassium: ['鉀', '钾', 'potassium'],
+  calorie: ['熱量', '热量', '卡路里', '低卡', '卡', 'kcal', 'calorie', 'calories'],
+  carb: ['碳水', '碳水化合物', '澱粉', '淀粉', '醣', '糖', 'carbs', 'carbohydrate', 'starch'],
+  fat: ['油脂', '脂肪', '好油', 'fat', 'fats', 'mufa']
+};
+
+function getSynonymVariants(word) {
+  const w = word.toLowerCase();
+  for (const group of Object.values(SYNONYMS)) {
+    if (group.some(term => term.toLowerCase() === w)) {
+      return group;
+    }
+  }
+  return [word];
+}
+
 var T={
 title:['🥗 食物營養分類速查表','🥗 食物营养速查表','🥗 Food Nutrition Reference'],
 subtitle:['105 項食物・九大營養屬性・11 種食材類型・多選篩選（AND／OR）','105 项食物・九大营养属性・11 种食材类型・多选筛选（AND／OR）','105 foods · 9 nutrient groups · 11 food types · multi-filter (AND / OR)'],
 panelTitle:['🎯 條件篩選','🎯 条件筛选','🎯 Filters'],
-searchPh:['搜尋食物或關鍵字','搜索食物或关键字','Search foods or keywords'],
+searchPh:['搜尋食物或關鍵字（支援同義詞）','搜索食物或关键字（支持同义词）','Search foods or keywords (synonyms supported)'],
 clear:['清除','清除','Clear'],
 lblView:['瀏覽方式','浏览方式','Browse by'],
 viewNut:['營養屬性','营养属性','Nutrients'],
@@ -460,7 +471,7 @@ lblMode:['符合模式','符合模式','Match mode'],
 modeAnd:['全部 AND','全部 AND','All AND'],
 modeOr:['任一 OR','任一 OR','Any OR'],
 lblSort:['排序','排序','Sort'],
-hint:['💡 營養類別遵循 AND／OR 模式；食材類型為「或」邏輯；<kbd>/</kbd> 聚焦搜尋、<kbd>Esc</kbd> 清除。','💡 营养类别遵循 AND／OR 模式；食材类型为「或」逻辑；<kbd>/</kbd> 聚焦搜索、<kbd>Esc</kbd> 清除。','💡 Nutrient groups follow AND/OR; food types use OR; <kbd>/</kbd> focuses search, <kbd>Esc</kbd> clears.'],
+hint:['💡 支援智慧同義詞匹配（如輸入「維C」可搜尋「維生素C」）；<kbd>/</kbd> 聚焦搜尋、<kbd>Esc</kbd> 清除。','💡 支持智能同义词匹配（如输入「维C」可搜索「维生素C」）；<kbd>/</kbd> 聚焦搜索、<kbd>Esc</kbd> 清除。','💡 Supports smart synonym search (e.g. "VC" finds "Vitamin C"); <kbd>/</kbd> focuses search, <kbd>Esc</kbd> clears.'],
 lblNav:['頁面導覽','页面导航','Navigate'],
 thFood:['食物名稱','食物名称','Food'],
 thAttr:['營養屬性','营养属性','Nutrient attributes'],
@@ -521,7 +532,6 @@ var CAT={
  light:{i:'🥒',n:['低熱量','低热量','Low-Calorie'],sh:['低熱量','低热量','Low Cal'],v:'--light',s:['每100g ≤40 kcal 且高水分，體積大飽足感佳','每100g ≤40 kcal 且高水分，体积大饱足感佳','≤40 kcal per 100g, high water, big volume, filling']}
 };
 
-/* ════ 食材類型定義 ════ */
 var TYPE_ORDER=['grain','veg','fruit','meat','sea','egg','soy','dairy','nut','oil','drink'];
 var TYPE={
  grain:{i:'🌾',n:['穀物主食','谷物主食','Grains & Staples'],sh:['穀物','谷物','Grain'],v:'--t-grain',s:['主要熱量來源；全穀優於精製','主要热量来源；全谷优于精制','Main energy source; whole > refined']},
@@ -561,12 +571,11 @@ var TIPS=[
 
 var SORTS=[['default','預設','预设','Default'],['name','名稱','名称','Name'],['tags','屬性數多→少','属性数多→少','Most attributes'],['kcalA','熱量 低→高','热量 低→高','Calories low→high'],['kcalD','熱量 高→低','热量 高→低','Calories high→low'],['prot','蛋白質 高→低','蛋白质 高→低','Protein high→low']];
 
-/* 額外營養標籤翻譯 */
 var XL={'膳食纖維':['膳食纤维','Fiber'],'維C':['维C','Vit C'],'鐵':['铁','Iron'],'鈣':['钙','Calcium'],'鉀':['钾','Potassium'],'鋅':['锌','Zinc'],'鎂':['镁','Magnesium'],'碘':['碘','Iodine'],'葉酸':['叶酸','Folate'],'水分':['水分','Water'],'維E':['维E','Vit E'],'維生素B1':['维生素B1','Vit B1'],'Omega-3':['Omega-3','Omega-3'],'GI':['GI','GI'],'單元不飽和':['单元不饱和','MUFA']};
 function xl(k){var e=XL[k];return e?(L===0?k:e[L-1]):k;}
 function xv(v){if(L===0)return v;if(L===1)return v.replace(/約/g,'约').replace(/豐富/g,'丰富');return v.replace(/約\s*/g,'≈ ').replace(/豐富/g,'rich');}
 
-/* ════ 食物資料庫 n/d = [繁,简,EN]；ty = 食材類型 ════ */
+/* ════ 食物資料庫 (105項) ════ */
 var F=[
 {n:['白米飯（熟）','白米饭（熟）','White rice (cooked)'],ty:'grain',t:['starch'],d:['精製澱粉，升糖快；搭配蔬菜與蛋白質平衡','精制淀粉，升糖快；搭配蔬菜与蛋白质平衡','Refined starch, fast glucose rise; pair with veggies & protein'],k:150,p:3,f:0.3,c:33,x:[['GI','約 80']]},
 {n:['糙米（生）','糙米（生）','Brown rice (raw)'],ty:'grain',t:['starch','fiber','gi'],d:['保留麩皮胚芽，纖維、B群、鎂皆優於白米','保留麸皮胚芽，纤维、B群、镁皆优于白米','Bran & germ kept; more fiber, B vitamins & magnesium than white rice'],k:360,p:7.5,f:2.7,c:75,x:[['膳食纖維','3.5 g'],['GI','約 55']]},
@@ -675,19 +684,22 @@ var F=[
 {n:['無糖綠茶','无糖绿茶','Unsweetened green tea'],ty:'drink',t:['light'],d:['兒茶素；咖啡因低於咖啡','儿茶素；咖啡因低于咖啡','Catechins; less caffeine than coffee'],k:1,p:0,f:0,c:0}
 ];
 
-/* ════ 工具 ════ */
+/* ════ 工具函式 ════ */
 function esc(s){
   if(s==null)return '';
   return String(s).replace(/[&<>"']/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });
 }
+
 function ftext(f){
   var tyText=TYPE[f.ty]?(TYPE[f.ty].n.join(' ')+' '+TYPE[f.ty].sh.join(' ')):'';
-  var tagText=f.t.map(function(t2){return CAT[t2]?(CAT[t2].n.join(' ')+' '+CAT[t2].sh[L]):'';}).join(' ');
+  var tagText=f.t.map(function(t2){return CAT[t2]?(CAT[t2].n.join(' ')+' '+CAT[t2].sh.join(' ')):'';}).join(' ');
+  var descText=f.d.join(' ');
   var ex=(f.x||[]).map(function(e){return e[0]+' '+e[1]+' '+xl(e[0])+' '+xv(e[1]);}).join(' ');
-  return f.n.join(' ')+' '+tyText+' '+tagText+' '+f.d[L]+' '+ex;
+  return f.n.join(' ')+' '+tyText+' '+tagText+' '+descText+' '+ex;
 }
+
 function chipsBrowse(tags,current){
   var pre=(L===2?'+':'＋');
   return tags.map(function(t2){
@@ -697,15 +709,11 @@ function chipsBrowse(tags,current){
 function chipsAll(tags){
   return tags.map(function(t2){return '<span class="chip c-'+t2+'">'+CAT[t2].sh[L]+'</span>';}).join('');
 }
-function chipsSolid(tags){
-  return tags.map(function(t2){return '<span class="chip c-'+t2+'">'+CAT[t2].sh[L]+'</span>';}).join('');
-}
 function ttagHtml(f,on){
   if(!TYPE[f.ty])return '';
   return '<span class="ttag'+(on?' on':'')+' t-'+f.ty+'">'+TYPE[f.ty].i+' '+TYPE[f.ty].sh[L]+'</span>';
 }
 
-/* ════ 營養小方塊 ════ */
 function gu(n,u){return (n==null)?'<b>—</b>':'<b>'+n+'<u>'+u+'</u></b>';}
 function bar(pct,cls){
   var w=Math.max(4,Math.min(100,Math.round(pct)));
@@ -725,13 +733,13 @@ function tiles(f){
   return '<div class="nutri">'+h+'</div>';
 }
 
-/* ════ DOM 引用與狀態 ════ */
+/* ════ 狀態管理 ════ */
 var q=document.getElementById('q'), countEl=document.getElementById('count'), body=document.body;
 var state={sel:{},tsel:{},mode:'and',sort:'default',view:'nutrient'};
 function selKeys(){return CAT_ORDER.filter(function(k){return state.sel[k];});}
 function tselKeys(){return TYPE_ORDER.filter(function(k){return state.tsel[k];});}
 
-/* ════ 營養類別按鈕 ════ */
+/* ════ 分類按鈕 ════ */
 var fbar=document.getElementById('fbar');
 CAT_ORDER.forEach(function(k){
   var b=document.createElement('button');
@@ -753,7 +761,6 @@ function syncBtns(){
   });
 }
 
-/* ════ 食材類型按鈕 ════ */
 var tbar=document.getElementById('tbar');
 TYPE_ORDER.forEach(function(k){
   var b=document.createElement('button');
@@ -775,7 +782,6 @@ function syncTbtns(){
   });
 }
 
-/* ════ 瀏覽方式／模式／排序 ════ */
 var viewNut=document.getElementById('viewNut'), viewTy=document.getElementById('viewTy');
 function syncView(){
   viewNut.classList.toggle('on',state.view==='nutrient');
@@ -791,6 +797,7 @@ function syncMode(){
 }
 modeAnd.addEventListener('click',function(){state.mode='and';syncMode();apply();});
 modeOr.addEventListener('click',function(){state.mode='or';syncMode();apply();});
+
 var sortSel=document.getElementById('sort');
 sortSel.addEventListener('change',function(){state.sort=sortSel.value;apply();});
 function updateSort(){
@@ -798,17 +805,16 @@ function updateSort(){
   sortSel.value=state.sort;
 }
 
-/* ════ 區塊生成（依瀏覽方式） ════ */
 function buildSecs(){
   var html='';
   if(state.view==='type'){
     TYPE_ORDER.forEach(function(k){
       var foods=F.filter(function(f){return f.ty===k;});
-      html+='<section class="card" id="sec-ty-'+k+'">'
+      html+='<section class="card" id="sec-ty-'+k+'" style="--c:var('+TYPE[k].v+')">'
        +'<h2><span class="h2ico">'+TYPE[k].i+'</span><span>'+TYPE[k].n[L]+SFX[L]+'</span><span class="num">'+foods.length+t('items')+'</span></h2>'
        +'<p class="sec-note">'+TYPE[k].s[L]+'</p>'
        +'<div class="twrap"><table><thead><tr>'
-       +'<th>'+t('thFood')+'</th><th>'+t('thAttr')+'</th><th>'+t('thDesc')+'</th><th>'+t('thVal')+'</th>'
+       +'<th scope="col">'+t('thFood')+'</th><th scope="col">'+t('thAttr')+'</th><th scope="col">'+t('thDesc')+'</th><th scope="col">'+t('thVal')+'</th>'
        +'</tr></thead><tbody>';
       foods.forEach(function(f){
         html+='<tr><td><span class="food-name">'+esc(f.n[L])+'</span></td><td>'+chipsAll(f.t)
@@ -819,11 +825,11 @@ function buildSecs(){
   }else{
     CAT_ORDER.forEach(function(k){
       var foods=F.filter(function(f){return f.t.indexOf(k)>-1;});
-      html+='<section class="card" id="sec-'+k+'">'
+      html+='<section class="card" id="sec-'+k+'" style="--c:var('+CAT[k].v+')">'
        +'<h2><span class="h2ico">'+CAT[k].i+'</span><span>'+CAT[k].n[L]+SFX[L]+'</span><span class="num">'+foods.length+t('items')+'</span></h2>'
        +'<p class="sec-note">'+CAT[k].s[L]+'</p>'
        +'<div class="twrap"><table><thead><tr>'
-       +'<th>'+t('thFood')+'</th><th>'+t('thAttr')+'</th><th>'+t('thDesc')+'</th><th>'+t('thVal')+'</th>'
+       +'<th scope="col">'+t('thFood')+'</th><th scope="col">'+t('thAttr')+'</th><th scope="col">'+t('thDesc')+'</th><th scope="col">'+t('thVal')+'</th>'
        +'</tr></thead><tbody>';
       foods.forEach(function(f){
         html+='<tr><td><span class="food-name">'+esc(f.n[L])+'</span>'+ttagHtml(f,false)+'</td><td>'+chipsBrowse(f.t,k)
@@ -847,14 +853,12 @@ function updatePills(){
   document.getElementById('pills').innerHTML=pillHtml;
 }
 
-/* ════ 標題徽章：抽出首位 emoji 包成彩色方塊 ════ */
 function h2ico(s){
   var m=s.match(/^(\S+)\s*/),ico='',rest=s;
   if(m&&m[1]&&/[^\u0000-\u007F]/.test(m[1])&&m[1].length<=4){ico=m[1];rest=s.slice(m[0].length);}
   return (ico?'<span class="h2ico">'+ico+'</span>':'')+'<span>'+esc(rest)+'</span>';
 }
 
-/* ════ 全站渲染（換語言時） ════ */
 function renderAll(){
   document.documentElement.lang=LOC[L];
   document.title=t('title');
@@ -899,7 +903,7 @@ function renderAll(){
   var multi=F.filter(function(f){return f.t.length>=2;})
     .sort(function(a,b){return (b.t.length-a.t.length)||a.n[L].localeCompare(b.n[L],LOC[L]);});
   document.getElementById('crossBody').innerHTML=multi.map(function(f){
-    return '<tr><td class="food-name">'+esc(f.n[L])+'</td><td>'+chipsSolid(f.t)+'</td></tr>';
+    return '<tr><td class="food-name">'+esc(f.n[L])+'</td><td>'+chipsAll(f.t)+'</td></tr>';
   }).join('');
   document.getElementById('tipsTitle').innerHTML=h2ico(t('tipsTitle'));
   document.getElementById('tipsNote').textContent=t('tipsNote');
@@ -910,39 +914,78 @@ function renderAll(){
   document.getElementById('footB').textContent=(L===2?': ':'：')+FOOTB[L];
   document.getElementById('theme').title=t('themeTitle');
   document.getElementById('totop').title=t('totopTitle');
+  document.getElementById('tryOr').textContent=t('tryOr');
+
   updateFbar(); updateTbar(); updateSort(); buildSecs();
 }
 
-/* ════ 篩選系統 ════ */
+/* ════ 篩選與同義詞核心邏輯 ════ */
 function match(f){
   var rawKws=q.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   var text=ftext(f).toLowerCase();
-  var kwHit=!rawKws.length||rawKws.every(function(kw){return text.indexOf(kw)>-1;});
+  
+  var kwHit=!rawKws.length||rawKws.every(function(kw){
+    var variants=getSynonymVariants(kw);
+    return variants.some(function(v){
+      return text.indexOf(v.toLowerCase())>-1;
+    });
+  });
+
   var keys=selKeys(), catHit;
   if(!keys.length)catHit=true;
   else if(state.mode==='and')catHit=keys.every(function(k){return f.t.indexOf(k)>-1;});
   else catHit=keys.some(function(k){return f.t.indexOf(k)>-1;});
+
   var tkeys=tselKeys();
   var typeHit=!tkeys.length||tkeys.indexOf(f.ty)>-1;
   return kwHit&&catHit&&typeHit;
 }
-function hl(name){
-  var raw=q.value.trim();
-  if(!raw)return esc(name);
-  var kws=raw.split(/\s+/).filter(Boolean);
-  var en=esc(name);
-  kws.forEach(function(kw){
-    var clean=esc(kw).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    if(!clean)return;
-    try{ en=en.replace(new RegExp('('+clean+')','gi'),'<mark>$1</mark>'); }catch(e){}
+
+/* ════ 安全高亮函數（長詞優先、支援同義詞、防 HTML 實體破裂） ════ */
+function hl(text) {
+  const query = q.value.trim();
+  if (!query || text == null) return esc(text);
+
+  const rawKeywords = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const termsSet = new Set();
+
+  rawKeywords.forEach(k => {
+    termsSet.add(k);
+    getSynonymVariants(k).forEach(syn => termsSet.add(syn.toLowerCase()));
   });
-  return en;
+
+  const sortedTerms = Array.from(termsSet)
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length)
+    .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+
+  if (!sortedTerms.length) return esc(text);
+
+  try {
+    const regex = new RegExp(`(${sortedTerms.join('|')})`, 'gi');
+    const parts = String(text).split(regex);
+
+    return parts.map(part => {
+      if (!part) return '';
+      if (regex.test(part)) {
+        regex.lastIndex = 0;
+        return `<mark>${esc(part)}</mark>`;
+      }
+      return esc(part);
+    }).join('');
+  } catch (e) {
+    return esc(text);
+  }
 }
+
 function resChips(f){
+  var noCatFilter = selKeys().length === 0;
   return f.t.map(function(t2){
-    return '<span class="chip'+(state.sel[t2]?'':' sub')+' c-'+t2+'">'+CAT[t2].sh[L]+'</span>';
+    var isSolid = noCatFilter || !!state.sel[t2];
+    return '<span class="chip'+(isSolid?'':' sub')+' c-'+t2+'">'+CAT[t2].sh[L]+'</span>';
   }).join('');
 }
+
 function sortLabel(v){
   for(var i=0;i<SORTS.length;i++){ if(SORTS[i][0]===v)return SORTS[i][1+L]; }
   return '';
@@ -996,8 +1039,8 @@ function apply(){
 
   if(list.length){
     tbody.innerHTML=list.map(function(f){
-      return '<tr><td><span class="food-name">'+hl(f.n[L])+'</span>'+ttagHtml(f,false)+'</td><td>'+resChips(f)
-        +'</td><td>'+esc(f.d[L])+'</td><td>'+tiles(f)+'</td></tr>';
+      return '<tr><td><span class="food-name">'+hl(f.n[L])+'</span>'+ttagHtml(f, !!state.tsel[f.ty])+'</td><td>'+resChips(f)
+        +'</td><td>'+hl(f.d[L])+'</td><td>'+tiles(f)+'</td></tr>';
     }).join('');
     resTwrap.style.display='';
     empty.style.display='none';
@@ -1025,7 +1068,9 @@ function resetAll(){
   state.sel={};
   state.tsel={};
   state.sort='default';
+  state.mode='and';
   sortSel.value='default';
+  syncMode();
   syncBtns();
   syncTbtns();
   apply();
@@ -1034,27 +1079,36 @@ document.getElementById('reset').addEventListener('click',function(){ resetAll()
 document.getElementById('tryOr').addEventListener('click',function(){
   state.mode='or'; syncMode(); apply();
 });
+
 document.getElementById('pills').addEventListener('click',function(e){
   var a=e.target.closest('a');
   if(!a)return;
+  e.preventDefault();
   var targetId=a.getAttribute('href');
   var wasFiltered=selKeys().length>0||tselKeys().length>0||q.value.trim()!==''||state.sort!=='default';
   if(wasFiltered){
     resetAll();
-    if(targetId && targetId.startsWith('#')){
-      setTimeout(function(){
-        var el=document.querySelector(targetId);
-        if(el)el.scrollIntoView({behavior:'smooth'});
-      },20);
-    }
+  }
+  if(targetId && targetId.startsWith('#')){
+    setTimeout(function(){
+      var el=document.querySelector(targetId);
+      if(el)el.scrollIntoView({behavior:'smooth'});
+    }, wasFiltered ? 30 : 0);
   }
 });
+
 document.addEventListener('keydown',function(e){
-  if(e.key==='/' && document.activeElement!==q){ e.preventDefault(); q.focus(); }
-  if(e.key==='Escape'){ resetAll(); q.blur(); }
+  var tag = document.activeElement ? document.activeElement.tagName : '';
+  if(e.key==='/' && tag!=='INPUT' && tag!=='TEXTAREA'){ 
+    e.preventDefault(); 
+    q.focus(); 
+  }
+  if(e.key==='Escape'){ 
+    resetAll(); 
+    q.blur(); 
+  }
 });
 
-/* ════ 語言切換 ════ */
 function syncLangBtns(){
   [].forEach.call(document.querySelectorAll('#langSeg button'),function(b){
     b.classList.toggle('on',parseInt(b.getAttribute('data-l'),10)===L);
@@ -1072,7 +1126,6 @@ document.getElementById('langSeg').addEventListener('click',function(e){
   apply();
 });
 
-/* ════ 初始化 ════ */
 var savedLang=null;
 try{savedLang=localStorage.getItem('foodlang');}catch(e){}
 if(savedLang==='1'||savedLang==='2'||savedLang==='0')L=parseInt(savedLang,10);
@@ -1082,7 +1135,6 @@ syncView();
 syncMode();
 apply();
 
-/* ════ 深色模式／回頂端 ════ */
 var themeBtn=document.getElementById('theme');
 function setTheme(d,save){
   body.classList.toggle('dark',d);
